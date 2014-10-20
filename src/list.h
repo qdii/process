@@ -79,7 +79,9 @@ std::vector< process<T> > get_entries_from_procfs()
 
     return all_processes;
 }
-
+template < typename T > struct iterator;
+template < typename T > bool operator!=( const iterator<T>&, const iterator<T>& );
+template < typename T > bool operator==( const iterator<T>&, const iterator<T>& );
 template < typename T >
 struct iterator
 {
@@ -88,9 +90,13 @@ struct iterator
 
     process<T> operator*();
     iterator<T> operator++();
+    iterator<T> operator++( int );
 
 private:
     boost::filesystem::directory_iterator m_pos;
+
+    friend bool operator!=<T>( const iterator<T> &, const iterator<T> & );
+    friend bool operator==<T>( const iterator<T> &, const iterator<T> & );
 };
 
 template< typename T >
@@ -100,13 +106,13 @@ iterator<T>::iterator( boost::filesystem::directory_iterator pos )
 }
 
 template< typename T >
-bool operator!=( const iterator<T>& a, const iterator<T>& b )
+bool operator!=( const iterator<T> & a, const iterator<T> & b )
 {
     return a.m_pos != b.m_pos;
 }
-    
+
 template< typename T >
-bool operator==( const iterator<T>& a, const iterator<T>& b )
+bool operator==( const iterator<T> & a, const iterator<T> & b )
 {
     return a.m_pos == b.m_pos;
 }
@@ -114,7 +120,12 @@ bool operator==( const iterator<T>& a, const iterator<T>& b )
 template < typename T >
 process<T> iterator<T>::operator*()
 {
-    return read_entry_from_procfs( m_pos );
+    process<T> readProcess;
+
+    if ( !read_entry_from_procfs( m_pos, readProcess ) )
+        return process<T>();
+
+    return readProcess;
 }
 
 template < typename T >
@@ -133,6 +144,15 @@ iterator<T> iterator<T>::operator++()
 }
 
 template < typename T >
+iterator<T> iterator<T>::operator++( int )
+{
+    iterator<T> copy_of_this( m_pos );
+    if ( m_pos != boost::filesystem::directory_iterator() )
+        m_pos++;
+    return copy_of_this;
+}
+
+template < typename T >
 struct const_iterator
 {
     const process<T> operator*();
@@ -142,6 +162,7 @@ struct const_iterator
 template < typename T >
 iterator<T> begin()
 {
+    return iterator<T>( boost::filesystem::directory_iterator( "/proc" ) );
 }
 
 template < typename T >

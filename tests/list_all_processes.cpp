@@ -7,16 +7,16 @@
     launch_test( X, #X )
 
 static void
-launch_test( bool(* test_function)(), std::string name )
+launch_test( bool( * test_function )(), std::string name )
 {
     std::cout << name << ": ";
 
     try
     {
-    if ( test_function() )
-        std::cout << "OK\n";
-    else
-        std::cout << "FAIL\n";
+        if ( test_function() )
+            std::cout << "OK\n";
+        else
+            std::cout << "FAIL\n";
     }
     catch( ... )
     {
@@ -27,11 +27,11 @@ launch_test( bool(* test_function)(), std::string name )
 bool count_processes()
 {
     unsigned count = 0;
-    for (ps::iterator<void> first = ps::begin<void>(), 
-                            last  = ps::end<void>(); 
+    for (ps::iterator<void> first( ps::begin<void>() ),
+                            last ( ps::end<void>()   ); 
                             first != last; first++      )
     {
-       count++; 
+        count++;
     }
     return count != 0;
 }
