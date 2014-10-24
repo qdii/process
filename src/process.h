@@ -14,7 +14,9 @@ template< typename T >
 struct process
 {
     explicit
-    process( pid_t pid, std::string cmdline );
+    process( pid_t pid, const std::string & cmdline );
+
+    process();
 
     /**@brief This is the name that makes most sense to a human
      *        It could be the title bar, or the product name as
@@ -30,6 +32,32 @@ private:
     pid_t       m_pid;
     std::string m_cmdline;
 };
+
+template< typename T >
+process<T>::process( pid_t pid, const std::string & cmdline )
+    : m_pid( pid )
+    , m_cmdline( cmdline )
+{
+}
+
+template< typename T >
+process<T>::process()
+    : m_pid( 0 )
+    , m_cmdline( "" )
+{
+}
+
+template< typename T >
+std::string process<T>::title() const
+{
+    return m_cmdline;
+}
+
+template< typename T >
+bool process<T>::valid() const
+{
+    return m_pid != 0;
+}
 
 } // namespace ps
 
