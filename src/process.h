@@ -42,8 +42,7 @@ process<T>::process( pid_t pid, const std::string & cmdline )
 
 template< typename T >
 process<T>::process()
-    : m_pid( 0 )
-    , m_cmdline( "" )
+    : process( 0, "" )
 {
 }
 
