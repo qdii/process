@@ -5,9 +5,31 @@
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
 #include <string>
+#ifdef __APPLE__
+#   include <TargetConditionals.h>
+#   ifdef TARGET_OS_MAC
+#       include <sys/proc_info.h>
+#       include <sys/sysctl.h>
+#       include <libproc.h>
+#   endif
+#endif
 
 namespace ps
 {
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+std::string get_cmdline_from_pid( const pid_t pid )
+{
+    std::string cmdline;
+    cmdline.resize( PROC_PIDPATHINFO_MAXSIZE);
+
+    const int ret = proc_pidpath(pid, (char*)cmdline.c_str(), cmdline.size());
+    if ( ret <= 0 ) 
+        return "";
+    
+    cmdline.resize( ret );
+    return cmdline; 
+}
+#endif
 
 /* @brief Describes a process */
 template< typename T >
@@ -15,6 +37,11 @@ struct process
 {
     explicit
     process( pid_t pid, const std::string & cmdline );
+
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+    explicit
+    process( const kinfo_proc & );
+#endif
 
     process();
 
@@ -40,6 +67,15 @@ process<T>::process( pid_t pid, const std::string & cmdline )
 {
 }
 
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+template< typename T >
+process<T>::process( const kinfo_proc & kproc )
+    : m_pid( kproc.kp_proc.p_pid )
+    , m_cmdline( get_cmdline_from_pid( m_pid ) )
+{
+} 
+#endif
+
 template< typename T >
 process<T>::process()
     : process( 0, "" )
@@ -62,3 +98,4 @@ bool process<T>::valid() const
 } // namespace ps
 
 #endif // PS_PROCESS_H
+

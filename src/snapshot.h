@@ -5,7 +5,15 @@
 #include <fstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <utility>
+#include <sys/sysctl.h>
+#include <pwd.h>
+#ifdef __APPLE__
+#   include "TargetConditionals.h"
+#endif
+
 #include "process.h"
+#include "common.h"
 
 namespace ps
 {
@@ -43,9 +51,58 @@ private:
     container m_processes;
 };
 
+
+
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+typename std::vector< kinfo_proc >
+get_processes_from_bsd_syscall()
+{
+    static const int    name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
+    // Declaring name as const requires us to cast it when passing it to
+    // sysctl because the prototype doesn't include the const modifier.
+    size_t              length;
+
+    kinfo_proc * result = NULL;
+    length = 0;
+    int err = sysctl( (int *) name, (sizeof(name) / sizeof(*name)) - 1,
+            NULL, &length,
+            NULL, 0);
+    if (err == -1)
+        return std::vector< kinfo_proc >();
+
+    std::vector< kinfo_proc > all_processes;
+    all_processes.resize( length );
+
+    err = sysctl( (int *) name, (sizeof(name) / sizeof(*name)) - 1,
+            result, &length,
+            NULL, 0);
+    if (err == -1)
+        return std::vector< kinfo_proc >();
+
+    return all_processes;
+}
+
+template< typename CONTAINER, typename T >
+CONTAINER get_entries_from_syscall()
+{
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+    const std::vector< kinfo_proc > bsd_processes = 
+        get_processes_from_bsd_syscall();
+
+    return CONTAINER(
+        bsd_processes.cbegin(),
+        bsd_processes.cend()
+    );
+#else
+    return std::vector< process<T> >();
+#endif
+}
+
+#endif
+
 template < typename T > static
 bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
-                             process<T> & out )
+        process<T> & out )
 {
     using namespace boost::filesystem;
 
@@ -115,9 +172,10 @@ CONTAINER capture_processes()
 {
     CONTAINER all_processes;
 
-#ifdef __linux
-    all_processes = get_entries_from_procfs< CONTAINER, T >();
-#endif
+    if ( TARGET_OS() == LINUX )
+        all_processes = get_entries_from_procfs< CONTAINER, T >();
+    else if ( TARGET_OS() == MAC_OSX )
+        all_processes = get_entries_from_syscall< CONTAINER, T >();
 
     return all_processes;
 }
@@ -128,8 +186,7 @@ snapshot<T>::snapshot()
 {
 }
 
-
-}
+} //namespace 
 
 #endif
 

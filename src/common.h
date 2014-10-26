@@ -45,7 +45,7 @@ OS TARGET_OS()
 #else
     return UNKNOWN;
 #endif
-} // namespace ps
+}
 
 static constexpr
 bool TARGET_OS_WINDOWS()
@@ -53,4 +53,5 @@ bool TARGET_OS_WINDOWS()
     return TARGET_OS() == WIN32 || TARGET_OS() == WIN64;
 }
 
+} // namespace ps
 #endif // PS_COMMON_H
