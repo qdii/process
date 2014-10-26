@@ -38,7 +38,6 @@ bool count_processes()
         if (!(*first).valid())
             continue;
 
-        std::cout << first->title() << '\n';
         count++;
     }
     return count != 0;
