@@ -5,6 +5,7 @@
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
 #include <string>
+#include <assert.h>
 #ifdef __APPLE__
 #   include <TargetConditionals.h>
 #   ifdef TARGET_OS_MAC
@@ -19,6 +20,9 @@ namespace ps
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
 std::string get_cmdline_from_pid( const pid_t pid )
 {
+    if ( pid == 0 )
+        return "";
+
     std::string cmdline;
     cmdline.resize( PROC_PIDPATHINFO_MAXSIZE);
 
@@ -40,7 +44,7 @@ struct process
 
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
     explicit
-    process( const kinfo_proc & );
+    process( pid_t pid );
 #endif
 
     process();
@@ -69,11 +73,11 @@ process<T>::process( pid_t pid, const std::string & cmdline )
 
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
 template< typename T >
-process<T>::process( const kinfo_proc & kproc )
-    : m_pid( kproc.kp_proc.p_pid )
-    , m_cmdline( get_cmdline_from_pid( m_pid ) )
+process<T>::process( const pid_t pid )
+    : m_pid( pid )
+    , m_cmdline( get_cmdline_from_pid( pid ) )
 {
-} 
+}
 #endif
 
 template< typename T >

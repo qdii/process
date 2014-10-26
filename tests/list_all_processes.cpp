@@ -1,3 +1,4 @@
+#include <boost/filesystem.hpp>
 #include <iostream>
 
 #include "../src/process.h"
@@ -5,6 +6,8 @@
 
 #define LAUNCH_TEST( X ) \
     launch_test( X, #X )
+
+static std::string own_name;
 
 static void
 launch_test( bool( * test_function )(), std::string name )
@@ -40,7 +43,19 @@ bool count_processes()
     return count != 0;
 }
 
-int main()
+bool find_myself()
 {
+    ps::snapshot<int> all_processes;
+    return std::find_if(
+        all_processes.cbegin(),
+        all_processes.cend(),
+        []( const ps::process<int> &t ) { return t.title() == own_name; } 
+    ) != all_processes.cend();
+}
+
+int main( int, char* argv[] )
+{
+    own_name = boost::filesystem::canonical( argv[0] ).string();
     LAUNCH_TEST( count_processes );
+    LAUNCH_TEST( find_myself );
 }

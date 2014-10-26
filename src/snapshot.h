@@ -54,45 +54,23 @@ private:
 
 
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
-typename std::vector< kinfo_proc >
-get_processes_from_bsd_syscall()
-{
-    static const int    name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
-    // Declaring name as const requires us to cast it when passing it to
-    // sysctl because the prototype doesn't include the const modifier.
-    size_t              length;
-
-    kinfo_proc * result = NULL;
-    length = 0;
-    int err = sysctl( (int *) name, (sizeof(name) / sizeof(*name)) - 1,
-            NULL, &length,
-            NULL, 0);
-    if (err == -1)
-        return std::vector< kinfo_proc >();
-
-    std::vector< kinfo_proc > all_processes;
-    all_processes.resize( length );
-
-    err = sysctl( (int *) name, (sizeof(name) / sizeof(*name)) - 1,
-            result, &length,
-            NULL, 0);
-    if (err == -1)
-        return std::vector< kinfo_proc >();
-
-    return all_processes;
-}
-
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_syscall()
 {
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
-    const std::vector< kinfo_proc > bsd_processes = 
-        get_processes_from_bsd_syscall();
+    std::vector< pid_t > bsd_processes;
+    const int length = proc_listpids( PROC_ALL_PIDS, 0, nullptr, 0 );
+    bsd_processes.resize( length );
+    const int success 
+        = proc_listpids( PROC_ALL_PIDS, 0,
+                         const_cast<pid_t*>(bsd_processes.data()),
+                         length );
 
     return CONTAINER(
         bsd_processes.cbegin(),
         bsd_processes.cend()
     );
+
 #else
     return std::vector< process<T> >();
 #endif
