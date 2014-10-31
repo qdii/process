@@ -49,6 +49,7 @@ process<T>::process()
 template< typename T >
 std::string process<T>::title() const
 {
+    assert( valid() );
     return m_cmdline;
 }
 

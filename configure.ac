@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([process], [1.0], [victor.lavaud@gmail.com])
-AC_CONFIG_SRCDIR([src/list.h])
+AC_CONFIG_SRCDIR([src/process.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign])
