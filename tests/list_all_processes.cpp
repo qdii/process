@@ -38,6 +38,7 @@ bool count_processes()
         if (!(*first).valid())
             continue;
 
+        std::cout << first->title() << '\n';
         count++;
     }
     return count != 0;
@@ -45,11 +46,13 @@ bool count_processes()
 
 bool find_myself()
 {
+    using boost::filesystem::path;
+    std::cout << own_name <<'\n';
     ps::snapshot<int> all_processes;
     return std::find_if(
         all_processes.cbegin(),
         all_processes.cend(),
-        []( const ps::process<int> &t ) { return t.title() == own_name; } 
+        []( const ps::process<int> &t ) { return equivalent(path(t.title()), path(own_name)); } 
     ) != all_processes.cend();
 }
 

@@ -53,7 +53,6 @@ private:
 
 
 
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_syscall()
 {
@@ -75,8 +74,6 @@ CONTAINER get_entries_from_syscall()
     return std::vector< process<T> >();
 #endif
 }
-
-#endif
 
 template < typename T > static
 bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
