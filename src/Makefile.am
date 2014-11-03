@@ -13,6 +13,6 @@ libprocess_la_LDFLAGS = \
 
 if COCOA
 libprocess_la_SOURCES += \
-	cocoa.m	\
+	cocoa.mm \
 	cocoa.h
 endif
