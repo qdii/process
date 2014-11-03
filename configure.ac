@@ -22,6 +22,7 @@ AM_CONDITIONAL([COCOA],[test "x$cocoa" = "xtrue"])
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_OBJC
+AC_PROG_OBJCXX
 
 if test "x$cocoa" = "xtrue"; then
     CPPFLAGS="$CPPFLAGS -DPS_COCOA"
