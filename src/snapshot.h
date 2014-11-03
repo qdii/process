@@ -1,23 +1,11 @@
 #ifndef PS_SNAPSHOT_H
 #define PS_SNAPSHOT_H
 
-#include <vector>
-#include <fstream>
-#include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/current_function.hpp>
-#include <utility>
-#include <sys/sysctl.h>
-#include <pwd.h>
-#ifdef __APPLE__
-#   include <TargetConditionals.h>
-#   ifdef TARGET_OS_MAC
-#       include "cocoa.h"
-#   endif
-#endif
-
-#include "process.h"
 #include "common.h"
+#if defined( __APPLE__ ) && defined( TARGET_OS_MAC )
+#   include "cocoa.h"
+#endif
+#include "process.h"
 #include "cocoa.h"
 
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
@@ -131,7 +119,7 @@ CONTAINER get_entries_from_syscall()
     );
 
 #else
-    return std::vector< process<T> >();
+    return CONTAINER();
 #endif
 }
 
@@ -207,10 +195,10 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
 {
     CONTAINER all_processes;
 
-    if ( TARGET_OS() == LINUX )
+    if ( target_os() == LINUX )
         all_processes = get_entries_from_procfs< CONTAINER, T >();
 
-    else if ( TARGET_OS() == MAC_OSX )
+    else if ( target_os() == MAC_OSX )
     {
         if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
         { 

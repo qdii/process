@@ -47,8 +47,16 @@ bool count_processes()
 bool test_desktop_processes()
 {
     ps::snapshot<int> all_processes( ps::snapshot<int>::ENUMERATE_DESKTOP_APPS );
-    for_each( all_processes.cbegin(), all_processes.cend(),
-              []( const ps::process<int> & p ) { describe( std::cout, p ); } );
+//    for_each( all_processes.cbegin(), all_processes.cend(),
+//              []( const ps::process<int> & p ) { describe( std::cout, p ); } );
+    return true;
+}
+
+bool test_bsd_processes()
+{
+    ps::snapshot<int> all_processes( ps::snapshot<int>::ENUMERATE_BSD_APPS );
+//    for_each( all_processes.cbegin(), all_processes.cend(),
+//              []( const ps::process<int> & p ) { describe( std::cout, p ); } );
     return true;
 }
 
@@ -69,4 +77,5 @@ int main( int, char* argv[] )
     LAUNCH_TEST( count_processes );
     LAUNCH_TEST( find_myself );
     LAUNCH_TEST( test_desktop_processes );
+    LAUNCH_TEST( test_bsd_processes );
 }

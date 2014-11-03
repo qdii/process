@@ -4,17 +4,9 @@
 // VERSION 1.0
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
-#include <string>
-#include <assert.h>
-#include <boost/filesystem.hpp>
-
-#ifdef __APPLE__
-#   include <TargetConditionals.h>
-#   ifdef TARGET_OS_MAC
-#       include <sys/proc_info.h>
-#       include <sys/sysctl.h>
-#       include <libproc.h>
-#   endif
+#include "common.h"
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+#   include "cocoa.h"
 #endif
 
 namespace ps
@@ -34,6 +26,30 @@ std::string get_cmdline_from_pid( const pid_t pid )
     
     cmdline.resize( ret );
     return cmdline; 
+}
+
+std::string get_title_from_pid( const pid_t pid )
+{
+    char * buffer;
+    const int success = get_info_from_pid( pid, &buffer, nullptr );
+    if ( success != 0 )
+        return "";
+
+    std::string title( buffer );
+    free( buffer );
+    return title;
+}
+
+std::string get_name_from_pid( const pid_t pid )
+{
+    char * buffer;
+    const int success = get_info_from_pid( pid, nullptr, &buffer);
+    if ( success != 0 )
+        return "";
+
+    std::string name( buffer );
+    free( buffer );
+    return name;
 }
 #endif
 
@@ -75,6 +91,7 @@ struct process
      *        a process (even a non-running, or non-existing one) */
     bool valid() const;
 
+    pid_t pid() const { return m_pid; }
 
 private:
     pid_t       m_pid;
@@ -109,8 +126,8 @@ template< typename T >
 process<T>::process( const pid_t pid )
     : m_pid( pid )
     , m_cmdline( get_cmdline_from_pid( pid ) )
-    , m_title()
-    , m_name()
+    , m_title( get_title_from_pid( pid ) )
+    , m_name( get_name_from_pid( pid ) )
 {
 }
 #endif
@@ -151,7 +168,7 @@ bool process<T>::valid() const
 template< typename T >
 void describe( std::ostream & ostr, const process<T> & proc )
 {
-    ostr << "title: " << proc.title() << "name: " << proc.name() << "cmdline: " << proc.cmdline() << '\n';
+    ostr << "pid: " << proc.pid() << ", title: \"" << proc.title() << "\", name: \"" << proc.name() << "\", cmdline: \"" << proc.cmdline() << "\"\n";
 }
 
 } // namespace ps

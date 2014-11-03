@@ -1,6 +1,27 @@
 #ifndef PS_COMMON_H
 #define PS_COMMON_H
 
+#include <string>
+#include <assert.h>
+#include <boost/filesystem.hpp>
+#include <vector>
+#include <fstream>
+#include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/current_function.hpp>
+#include <utility>
+#include <sys/sysctl.h>
+#include <pwd.h>
+
+#ifdef __APPLE__
+#   include <TargetConditionals.h>
+#   ifdef TARGET_OS_MAC
+#       include <sys/proc_info.h>
+#       include <sys/sysctl.h>
+#       include <libproc.h>
+#   endif
+#endif
+
 namespace ps
 {
 enum OS
@@ -15,9 +36,8 @@ enum OS
     POSIX,
     UNKNOWN
 };
-
-static constexpr 
-OS TARGET_OS()
+static constexpr
+OS target_os()
 {
 #ifdef _WIN32
 #   ifdef _WIN64
@@ -48,9 +68,9 @@ OS TARGET_OS()
 }
 
 static constexpr
-bool TARGET_OS_WINDOWS()
+bool target_os_windows()
 {
-    return TARGET_OS() == WIN32 || TARGET_OS() == WIN64;
+    return target_os() == WIN32 || target_os() == WIN64;
 }
 
 } // namespace ps
