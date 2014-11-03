@@ -10,8 +10,8 @@ AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 
 # Checks for programs.
-AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_OBJCXX
 
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # Checks for libraries.

@@ -3,6 +3,7 @@ check_PROGRAMS = list_all_processes
 list_all_processes_SOURCES = list_all_processes.cpp
 list_all_processes_CPPFLAGS = -iquote $(top_srcdir) $(BOOST_CPPFLAGS)
 list_all_processes_LDFLAGS = $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_SYSTEM_LIBS)
-list_all_processes_LDADD = $(BOOST_FILESYSTEM_LIBS) $(BOOST_SYSTEM_LIBS)
+list_all_processes_DEPENDENCIES = $(top_builddir)/src/libprocess.la
+list_all_processes_LDADD = $(BOOST_FILESYSTEM_LIBS) $(BOOST_SYSTEM_LIBS) $(list_all_processes_DEPENDENCIES)
 
 

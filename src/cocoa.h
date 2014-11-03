@@ -3,8 +3,10 @@
 
 #include <sys/types.h>
 
-int getDesktopApplicationPIDs( pid_t * pidArray, unsigned * length );
-int getDesktopApplicationBundleIdentifiers( char ** bundleIdentifiers, unsigned * length );
+int getDesktopApplications( pid_t * pidArray, 
+                            char ** bundleIdentifierArray,
+                            char ** bundleNameArray,
+                            int length );
 
 
 #endif // PS_COCOA_H

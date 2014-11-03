@@ -5,19 +5,26 @@
 #include <fstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/current_function.hpp>
 #include <utility>
 #include <sys/sysctl.h>
 #include <pwd.h>
 #ifdef __APPLE__
-#   include "TargetConditionals.h"
+#   include <TargetConditionals.h>
+#   ifdef TARGET_OS_MAC
+#       include "cocoa.h"
+#   endif
 #endif
 
 #include "process.h"
 #include "common.h"
+#include "cocoa.h"
 
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+extern std::string get_cmdline_from_pid( const pid_t pid );
+#endif
 namespace ps
 {
-
 /**@struct snapshot
  * @brief A snapshot of all running processes at a given moment
  */
@@ -51,7 +58,49 @@ private:
     container m_processes;
 };
 
+template< typename CONTAINER, typename T >
+CONTAINER get_entries_from_window_manager()
+{
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+    CONTAINER processes;
+    const int nbApplications =
+        getDesktopApplications( nullptr, nullptr, nullptr, 0 );
 
+    std::vector< pid_t > pidArray( nbApplications );
+    std::vector< char* > bundleIdentifierArray( nbApplications );
+    std::vector< char* > bundleNameArray( nbApplications );
+    int success = getDesktopApplications( 
+            const_cast<pid_t*>( pidArray.data() ),
+            const_cast<char **>( bundleIdentifierArray.data() ),
+            const_cast<char **>( bundleNameArray.data() ),
+            nbApplications
+            );
+    if ( success < 0 )
+        goto exit;
+
+    for ( int i=0; i<success; ++i )
+    {
+        if ( pidArray[i] == 0 )
+            continue;
+
+        processes.emplace_back( 
+                pidArray[i], 
+                get_cmdline_from_pid( pidArray[i] ),
+                bundleIdentifierArray[i],
+                bundleNameArray[i]
+        );
+    }
+
+exit:
+    std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(), &free );
+    std::for_each( bundleNameArray.begin(), bundleNameArray.end(), &free );
+    
+    return processes;
+
+#else
+    return CONTAINER();
+#endif
+}
 
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_syscall()
@@ -65,9 +114,12 @@ CONTAINER get_entries_from_syscall()
                          const_cast<pid_t*>(bsd_processes.data()),
                          length );
 
+    if ( !success )
+        return CONTAINER();
+
     return CONTAINER(
-        bsd_processes.cbegin(),
-        bsd_processes.cend()
+        bsd_processes.begin(),
+        std::remove( bsd_processes.begin(), bsd_processes.end(), 0 )
     );
 
 #else
@@ -149,8 +201,14 @@ CONTAINER capture_processes()
 
     if ( TARGET_OS() == LINUX )
         all_processes = get_entries_from_procfs< CONTAINER, T >();
+
     else if ( TARGET_OS() == MAC_OSX )
-        all_processes = get_entries_from_syscall< CONTAINER, T >();
+    {
+        const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
+        const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
+        all_processes.insert( all_processes.end(), bsd_processes.cbegin(),    bsd_processes.cend() );
+        all_processes.insert( all_processes.end(), gui_applications.cbegin(), gui_applications.cend() );
+    }
 
     return all_processes;
 }

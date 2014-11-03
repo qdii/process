@@ -1,54 +1,45 @@
+#import <Foundation/Foundation.h>
+#import <AppKit/NSRunningApplication.h>
+#import <AppKit/NSWorkspace.h>
 #include "cocoa.h"
 
-int getDesktopApplicationPIDs( pid_t * pidArray, unsigned * length )
+int getDesktopApplications( pid_t * pidArray, 
+                            char ** bundleIdentifierArray,
+                            char ** bundleNameArray,
+                            int length )
 {
+    NSAutoreleasePool *p = [NSAutoreleasePool new];
+
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
     NSArray * apps = [ws runningApplications];
     NSUInteger count = [apps count];
 
-    if ( pidArray == 0 && length == 0 )
-        return count; 
-
-    if ( length == 0 )
-        return -1;
-
-    NSUInteger max = (count > *length) ? *length:count;
-    for (NSUInteger i = 0; i < max; i++)
+    if ( pidArray == 0 && bundleIdentifierArray == 0
+                       && bundleNameArray == 0 )
     {
-        NSRunningApplication *app = [apps objectAtIndex: i];
-
-        if(app.activationPolicy == NSApplicationActivationPolicyRegular)
-            pidArray[i] = [app processIdentifier];
+        [p release];
+        return count; 
     }
-    *length = max;
-    return 0;
-}
 
-int getDesktopApplicationBundleIdentifiers( char ** bundleIdentifiers, unsigned * length )
-{
-    NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-    NSArray * apps = [ws runningApplications];
-    NSUInteger count = [apps count];
-
-    if ( pidArray == 0 && length == 0 )
-        return count; 
-
-    if ( length == 0 )
-        return -1;
-
-    NSUInteger max = (count > *length) ? *length:count;
+    NSUInteger max = (count > length) ? length:count;
     for (NSUInteger i = 0; i < max; i++)
     {
+
         NSRunningApplication *app = [apps objectAtIndex: i];
 
         if(app.activationPolicy == NSApplicationActivationPolicyRegular)
         {
-            unsigned length = [[ app bundleIdentifier ] length ] + 1;
-            char * buffer = malloc( length );
-            strcpy( buffer, [[ app bundleIdentifier ] cStringUsingEncoding ] );
-            bundleIdentifiers[i] = buffer;
+            if ( pidArray )
+                pidArray[i] = [app processIdentifier];
+
+            if ( bundleIdentifierArray )
+                bundleIdentifierArray[i] = strdup( (char*)[[ app bundleIdentifier ] UTF8String ] );
+
+            if ( bundleNameArray )
+                bundleNameArray[i] = strdup( [[ app localizedName ] UTF8String ] );
         }
     }
-    *length = max;
-    return 0;
+    [ p release ];
+    return max;
 }
+

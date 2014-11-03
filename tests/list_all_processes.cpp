@@ -3,6 +3,7 @@
 
 #include "../src/process.h"
 #include "../src/snapshot.h"
+#include "../src/cocoa.h"
 
 #define LAUNCH_TEST( X ) \
     launch_test( X, #X )
@@ -43,15 +44,29 @@ bool count_processes()
     return count != 0;
 }
 
+bool test_desktop_processes()
+{
+    int nbDesktopProcesses = getDesktopApplications(nullptr, nullptr, nullptr, 0);
+    std::vector<pid_t> allPids( nbDesktopProcesses, 0 );
+    std::vector<char*> bundleIdentifiers( nbDesktopProcesses, nullptr );
+    std::vector<char*> bundleNameArray( nbDesktopProcesses, nullptr );
+    const int success 
+        = getDesktopApplications( const_cast<pid_t*>(allPids.data()),
+                                  const_cast<char**>(bundleIdentifiers.data()),
+                                  const_cast<char**>(bundleNameArray.data()),
+                                  nbDesktopProcesses );
+
+    return success >= 0;
+}
+
 bool find_myself()
 {
     using boost::filesystem::path;
-    std::cout << own_name <<'\n';
     ps::snapshot<int> all_processes;
     return std::find_if(
         all_processes.cbegin(),
         all_processes.cend(),
-        []( const ps::process<int> &t ) { return equivalent(path(t.title()), path(own_name)); } 
+        []( const ps::process<int> &t ) { return equivalent(path(t.cmdline()), path(own_name)); } 
     ) != all_processes.cend();
 }
 
@@ -60,4 +75,5 @@ int main( int, char* argv[] )
     own_name = boost::filesystem::canonical( argv[0] ).string();
     LAUNCH_TEST( count_processes );
     LAUNCH_TEST( find_myself );
+    LAUNCH_TEST( test_desktop_processes );
 }
