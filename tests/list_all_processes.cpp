@@ -46,17 +46,10 @@ bool count_processes()
 
 bool test_desktop_processes()
 {
-    int nbDesktopProcesses = getDesktopApplications(nullptr, nullptr, nullptr, 0);
-    std::vector<pid_t> allPids( nbDesktopProcesses, 0 );
-    std::vector<char*> bundleIdentifiers( nbDesktopProcesses, nullptr );
-    std::vector<char*> bundleNameArray( nbDesktopProcesses, nullptr );
-    const int success 
-        = getDesktopApplications( const_cast<pid_t*>(allPids.data()),
-                                  const_cast<char**>(bundleIdentifiers.data()),
-                                  const_cast<char**>(bundleNameArray.data()),
-                                  nbDesktopProcesses );
-
-    return success >= 0;
+    ps::snapshot<int> all_processes( ps::snapshot<int>::ENUMERATE_DESKTOP_APPS );
+    for_each( all_processes.cbegin(), all_processes.cend(),
+              []( const ps::process<int> & p ) { describe( std::cout, p ); } );
+    return true;
 }
 
 bool find_myself()

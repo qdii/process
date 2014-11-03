@@ -35,7 +35,15 @@ private:
     typedef std::vector< process< T > > container;
 
 public:
-    snapshot();
+    enum flags
+    {
+        ENUMERATE_DESKTOP_APPS = 0x1,
+        ENUMERATE_BSD_APPS     = 0x2,
+        ENUMERATE_ALL          = 0x3,
+    };
+
+public:
+    explicit snapshot( flags = ENUMERATE_ALL );
 
     typename container::iterator       begin()
     {
@@ -195,7 +203,7 @@ CONTAINER get_entries_from_procfs()
 }
 
 template< typename CONTAINER, typename T >
-CONTAINER capture_processes()
+CONTAINER capture_processes( typename snapshot<T>::flags flags )
 {
     CONTAINER all_processes;
 
@@ -204,18 +212,25 @@ CONTAINER capture_processes()
 
     else if ( TARGET_OS() == MAC_OSX )
     {
-        const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
-        const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
-        all_processes.insert( all_processes.end(), bsd_processes.cbegin(),    bsd_processes.cend() );
-        all_processes.insert( all_processes.end(), gui_applications.cbegin(), gui_applications.cend() );
+        if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
+        { 
+            const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
+            all_processes.insert( all_processes.end(), bsd_processes.cbegin(),    bsd_processes.cend() );
+        }
+
+        if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
+        {
+            const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
+            all_processes.insert( all_processes.end(), gui_applications.cbegin(), gui_applications.cend() );
+        }
     }
 
     return all_processes;
 }
 
 template< typename T >
-snapshot<T>::snapshot()
-    : m_processes( capture_processes< container, T >() )
+snapshot<T>::snapshot( typename snapshot<T>::flags flags )
+    : m_processes( capture_processes< container, T >( flags ) )
 {
 }
 
