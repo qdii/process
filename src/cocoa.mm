@@ -43,47 +43,6 @@ int get_desktop_applications( pid_t * pidArray,
     return max;
 }
 
-char * get_specific_info( CFDictionaryRef dictionary, CFStringRef info_type )
-{
-    NSAutoreleasePool *p = [NSAutoreleasePool new];
-    char * information = (char*) 0;
-
-    const NSString * data 
-        = reinterpret_cast<const NSString*>(CFDictionaryGetValue( dictionary, info_type ));
-
-    if ( !data )
-        information = strdup( "" );
-    else
-    { 
-        information = strdup( [ data UTF8String ] );
-        CFRelease( data );
-    }
-
-    assert( information != 0 );
-    [ p release ];
-    return information;
-}
-
-char * get_specific_numeric_info( CFDictionaryRef dictionary, CFStringRef info_type )
-{
-    NSAutoreleasePool *p = [NSAutoreleasePool new];
-    char * information = (char*) 0;
-
-    const NSNumber * data 
-        = reinterpret_cast<const NSNumber *>(CFDictionaryGetValue( dictionary, info_type ));
-
-    if ( !data )
-        information = strdup( "" );
-    else
-    { 
-        information = strdup( [ [ data stringValue ] UTF8String ] );
-        CFRelease( data );
-    }
-
-    assert( information != 0 );
-    [ p release ];
-    return information;
-}
 int get_info_from_pid( pid_t pid, char ** title,
                        char ** name,
                        char ** version )
@@ -98,32 +57,53 @@ int get_info_from_pid( pid_t pid, char ** title,
         return -1;
     }
 
-    CFDictionaryRef info 
+    CFDictionaryRef dictionary 
         = ProcessInformationCopyDictionary(&psn, kProcessDictionaryIncludeAllInformationMask);
 
-    if ( !info )
+    if ( !dictionary )
     {
         [ p release ];
         return -2;
     }
 
-    if (title) 
-        *title = get_specific_info( info, CFSTR("CFBundleIdentifier") );
+    NSString * path 
+        = (NSString*) CFDictionaryGetValue( dictionary, CFSTR("BundlePath") );
+    if ( !path )
+    {
+        [ p release ];
+        return -3;
+    }
+
+    NSBundle * bundle = [NSBundle bundleWithPath:path];
+    if ( !bundle )
+    {
+        [ p release ];
+        return -4;
+    }
+
+    NSDictionary * infoDic = [bundle infoDictionary];
+    if ( !infoDic )
+    {
+        [ p release ];
+        return -5;
+    }
+
+    if (title)
+    {
+        NSString * data = [ infoDic valueForKey:@"CFBundleName"];
+        *title = strdup( data ? [ data UTF8String ] : "" );
+    }
 
     if (name)
     {
-        char * bundleName = get_specific_info( info, CFSTR("CFBundleName") );
-        if ( strcmp( bundleName, "" ) == 0 )
-        {
-            free( bundleName );
-            *name = get_specific_info( info, CFSTR("CFBundleExecutable") );
-        }
-        else
-            *name = bundleName;
+        NSString * data = [ infoDic valueForKey:@"CFBundleIdentifier"];
+        *name = strdup( data ? [ data UTF8String ] : "" );
     }
-
     if (version)
-        *version = get_specific_info( info, CFSTR("CFBundleShortVersionString") );
+    {
+        NSString * data = [ infoDic valueForKey:@"CFBundleShortVersionString"];
+        *version = strdup( data ? [ data UTF8String ] : "" );
+    }
 
     [ p release ];
     return 0;
