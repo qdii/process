@@ -5,15 +5,16 @@
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
 #include "common.h"
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
 #   include "cocoa.h"
 #endif
 
 namespace ps
 {
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+inline
 std::string get_cmdline_from_pid( const pid_t pid )
 {
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     if ( pid == 0 )
         return "";
 
@@ -26,10 +27,15 @@ std::string get_cmdline_from_pid( const pid_t pid )
     
     cmdline.resize( ret );
     return cmdline; 
+#else
+    return "";
+#endif
 }
 
+static inline
 std::string get_title_from_pid( const pid_t pid )
 {
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     char * buffer;
     const int success = get_info_from_pid( pid, &buffer, nullptr );
     if ( success != 0 )
@@ -38,10 +44,15 @@ std::string get_title_from_pid( const pid_t pid )
     std::string title( buffer );
     free( buffer );
     return title;
+#else
+    return "";
+#endif
 }
 
+static inline
 std::string get_name_from_pid( const pid_t pid )
 {
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     char * buffer;
     const int success = get_info_from_pid( pid, nullptr, &buffer);
     if ( success != 0 )
@@ -50,8 +61,10 @@ std::string get_name_from_pid( const pid_t pid )
     std::string name( buffer );
     free( buffer );
     return name;
-}
+#else
+    return "";
 #endif
+}
 
 /* @brief Describes a process */
 template< typename T >
@@ -68,10 +81,8 @@ struct process
              const std::string & title,
              const std::string & name    );
 
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
     explicit
     process( pid_t pid );
-#endif
 
     process();
 
@@ -121,7 +132,6 @@ process<T>::process( pid_t pid,
 {
 }
 
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
 template< typename T >
 process<T>::process( const pid_t pid )
     : m_pid( pid )
@@ -130,7 +140,6 @@ process<T>::process( const pid_t pid )
     , m_name( get_name_from_pid( pid ) )
 {
 }
-#endif
 
 template< typename T >
 process<T>::process()

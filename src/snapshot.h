@@ -2,15 +2,12 @@
 #define PS_SNAPSHOT_H
 
 #include "common.h"
-#if defined( __APPLE__ ) && defined( TARGET_OS_MAC )
+#if defined( __APPLE__ ) && defined( TARGET_OS_MAC ) && defined(PS_COCOA)
 #   include "cocoa.h"
 #endif
 #include "process.h"
 #include "cocoa.h"
 
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
-extern std::string get_cmdline_from_pid( const pid_t pid );
-#endif
 namespace ps
 {
 /**@struct snapshot
@@ -57,7 +54,7 @@ private:
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_window_manager()
 {
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     CONTAINER processes;
     const int nbApplications =
         getDesktopApplications( nullptr, nullptr, nullptr, 0 );

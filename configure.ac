@@ -9,9 +9,23 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 
+AC_ARG_ENABLE( [cocoa], 
+               [AS_HELP_STRING([enable listing Cocoa application])],
+               [case "${enableval}" in
+                    yes) cocoa=true ;;
+                    no)  cocoa=false ;;
+                    *)   AC_MSG_ERROR([bad value ${enableval} for --enable-cocoa]) ;;
+                esac],[cocoa=false]
+             )
+AM_CONDITIONAL([COCOA],[test "x$cocoa" = "xtrue"])
+
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_OBJCXX
+AC_PROG_OBJC
+
+if test "x$cocoa" = "xtrue"; then
+    CPPFLAGS="$CPPFLAGS -DPS_COCOA"
+fi
 
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # Checks for libraries.
