@@ -1,7 +1,7 @@
 #ifndef PS_PROCESS_H
 #define PS_PROCESS_H
 
-// VERSION 1.0
+// details::VERSION 1.0
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
 #include "common.h"
@@ -11,6 +11,12 @@
 
 namespace ps
 {
+    namespace details
+    {
+        static PS_CONSTEXPR unsigned NAME = 0;
+        static PS_CONSTEXPR unsigned TITLE = 1;
+        static PS_CONSTEXPR unsigned VERSION = 2;
+    }
 #if defined(WIN32)
 static inline
 std::string get_specific_file_info(
@@ -37,19 +43,19 @@ std::string get_specific_file_info(
 }
 
 static inline
-std::tuple< std::string, std::string >
+std::tuple< std::string, std::string, std::string >
 get_file_info( const std::string & path )
 {
     if ( path.empty() )
-        return std::tuple< std::string, std::string >();
+        return std::tuple< std::string, std::string, std::string >();
 
     unsigned size = GetFileVersionInfoSize( path.c_str(), 0 );
     if ( !size )
-        return std::tuple< std::string, std::string >();
+        return std::tuple< std::string, std::string, std::string >();
 
     std::unique_ptr< unsigned char[] > data( new unsigned char[size] );
     if (!GetFileVersionInfo( path.c_str(), 0, size, data.get() ))
-        return std::tuple< std::string, std::string >();
+        return std::tuple< std::string, std::string, std::string >();
 
     struct LANGANDCODEPAGE 
     {
@@ -62,9 +68,10 @@ get_file_info( const std::string & path )
                   reinterpret_cast<LPVOID*>(&translate),
                   &size);
 
-    std::tuple< std::string, std::string > ret;
-    std::get<0>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName" );
-    std::get<1>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
+    std::tuple< std::string, std::string, std::string > ret;
+    std::get<details::NAME>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName" );
+    std::get<details::TITLE>( ret ) = ""; 
+    std::get<details::VERSION>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
 
     return ret;
 }
@@ -105,76 +112,65 @@ std::string get_cmdline_from_pid( const pid_t pid )
 
     return convert_kernel_drive_to_msdos_drive( 
         std::string( buffer.get(), buffer.get() + length ) );
+#else
+    (void)pid;
+    return "";
+#endif
+}
+
+static inline
+std::tuple< std::string, std::string, std::string >
+get_file_info( const pid_t pid )
+{
+#if defined(WIN32)
+    return get_file_info( get_cmdline_from_pid( pid ) );
+#elif defined(__APPLE__) && defined(TARGET_OS_MAC)
+    char * title,
+         * name,
+         * version;
+    const int success = 
+        get_info_from_pid( pid, &title, &name, &version );
+
+    if ( success != 0 )
+        return std::tuple< std::string, std::string, std::string >();
+
+    assert( title   != nullptr );
+    assert( name    != nullptr );
+    assert( version != nullptr );
+
+    // RAII structures to make sure the memory is free when going out of scope
+    std::unique_ptr< char, void (*)(void*) > title_ptr  ( title, &std::free );
+    std::unique_ptr< char, void (*)(void*) > name_ptr   ( name, &std::free );
+    std::unique_ptr< char, void (*)(void*) > version_ptr( version, &std::free );
+
+    std::tuple< std::string, std::string, std::string > file_info;
+    std::get<details::NAME>( file_info ).assign( name );
+    std::get<details::TITLE>( file_info ).assign( title );
+    std::get<details::VERSION>( file_info ).assign( version ); 
+
+    return file_info;
+#else
+    return std::tuple< std::string, std::string, std::string >();
 #endif
 }
 
 static inline
 std::string get_title_from_pid( const pid_t pid )
 {
-#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
-    char * buffer;
-    const int success = get_info_from_pid( pid, &buffer, nullptr );
-    if ( success != 0 )
-        return "";
-
-    std::string title( buffer );
-    free( buffer );
-    return title;
-#elif defined(WIN32)
-    const auto informations = 
-        get_file_info( get_cmdline_from_pid( pid ) );
-
-    return std::get<0>( informations );
-#else
-    return "";
-#endif
+    return std::get<details::TITLE>( get_file_info( pid ) );
 }
 
 static inline
 std::string get_name_from_pid( const pid_t pid )
 {
-#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
-    char * buffer;
-    const int success = get_info_from_pid( pid, nullptr, &buffer);
-    if ( success != 0 )
-        return "";
-
-    std::string name( buffer );
-    free( buffer );
-    return name;
-#elif defined(_WIN32) || defined( _WIN64 )
-    handle process_handle( create_handle_from_pid( pid ) );
-        
-    HMODULE hMod;
-    DWORD cbNeeded;
-    std::unique_ptr<char[]> buffer( new char[MAX_PATH] );
-
-    if ( !EnumProcessModules( process_handle, 
-                              &hMod, sizeof(hMod), 
-                              &cbNeeded) )
-        return "";
-
-    
-    GetModuleBaseNameA( process_handle, hMod, buffer.get(), 
-                        MAX_PATH );
-
-    return std::string( buffer.get() );
-#else
-    return "";
-#endif
+    return std::get<details::NAME>( get_file_info( pid ) );
 }
+
 
 static inline
 std::string get_version_from_pid( const pid_t pid )
 {
-#if defined(WIN32)
-    const auto informations = 
-        get_file_info( get_cmdline_from_pid( pid ) );
-
-    return std::get<1>( informations );
-#else
-    return "";
-#endif
+    return std::get<details::VERSION>( get_file_info( pid ) );
 }
 
 /* @brief Describes a process */

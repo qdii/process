@@ -14,7 +14,7 @@ namespace ps
  * @brief A snapshot of all running processes at a given moment
  */
 template< typename T >
-struct snapshot
+struct snapshot : public std::vector< process< T > > 
 {
 private:
     typedef std::vector< process< T > > container;
@@ -27,28 +27,7 @@ public:
         ENUMERATE_ALL          = 0x3,
     };
 
-public:
     explicit snapshot( flags = ENUMERATE_ALL );
-
-    typename container::iterator       begin()
-    {
-        return m_processes.begin();
-    };
-    typename container::iterator       end()
-    {
-        return m_processes.end();
-    };
-    typename container::const_iterator cbegin()
-    {
-        return m_processes.cbegin();
-    };
-    typename container::const_iterator cend()
-    {
-        return m_processes.cend();
-    };
-
-private:
-    container m_processes;
 };
 
 template< typename CONTAINER, typename T >
@@ -57,12 +36,12 @@ CONTAINER get_entries_from_window_manager()
 #if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     CONTAINER processes;
     const int nbApplications =
-        getDesktopApplications( nullptr, nullptr, nullptr, 0 );
+        get_desktop_applications( nullptr, nullptr, nullptr, 0 );
 
     std::vector< pid_t > pidArray( nbApplications );
     std::vector< char* > bundleIdentifierArray( nbApplications );
     std::vector< char* > bundleNameArray( nbApplications );
-    int success = getDesktopApplications( 
+    int success = get_desktop_applications( 
             const_cast<pid_t*>( pidArray.data() ),
             const_cast<char **>( bundleIdentifierArray.data() ),
             const_cast<char **>( bundleNameArray.data() ),
@@ -104,7 +83,7 @@ std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
     proc_listpids( PROC_ALL_PIDS, 0,
                    const_cast<pid_t*>(pids.data()),
-                   max_pids ) );
+                   max_pids );
 #elif defined( _WIN32 ) || defined( _WIN64 )
     DWORD nbBytes;
     EnumProcesses( const_cast<pid_t*>(pids.data()), 
@@ -231,7 +210,7 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
 
 template< typename T >
 snapshot<T>::snapshot( typename snapshot<T>::flags flags )
-    : m_processes( capture_processes< container, T >( flags ) )
+    : std::vector< process<T> >( capture_processes< container, T >( flags ) )
 {
 }
 

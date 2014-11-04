@@ -47,17 +47,13 @@ bool count_processes()
 bool test_desktop_processes()
 {
     ps::snapshot<int> all_processes( ps::snapshot<int>::ENUMERATE_DESKTOP_APPS );
-//    for_each( all_processes.cbegin(), all_processes.cend(),
-//              []( const ps::process<int> & p ) { describe( std::cout, p ); } );
-    return true;
+    return !all_processes.empty();
 }
 
 bool test_bsd_processes()
 {
     ps::snapshot<int> all_processes( ps::snapshot<int>::ENUMERATE_BSD_APPS );
-//    for_each( all_processes.cbegin(), all_processes.cend(),
-//              []( const ps::process<int> & p ) { describe( std::cout, p ); } );
-    return true;
+    return !all_processes.empty();
 }
 
 bool find_myself()
