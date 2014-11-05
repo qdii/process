@@ -214,8 +214,11 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
             const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
             all_processes.insert( all_processes.end(), bsd_processes.cbegin(), bsd_processes.cend() );
 
-            const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), procfs_entries.cbegin(), procfs_entries.cend() );
+            if ( target_os() == OS_LINUX )
+            {
+                const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
+                all_processes.insert( all_processes.end(), procfs_entries.cbegin(), procfs_entries.cend() );
+            }
         }
 
         if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
