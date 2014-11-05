@@ -134,8 +134,11 @@ namespace details
         return result;
     }
 
+#   endif
+
     std::vector<unsigned char> get_icon_from_file( const std::string & path )
     {
+#   ifdef _WIN32
         using namespace Gdiplus;
         gdiplus_context _;
 
@@ -169,9 +172,28 @@ namespace details
         }
 
         return std::vector<unsigned char>();
+#   elif defined __APPLE__ && defined TARGET_OS_MAC
+        if ( path.empty() )
+            return std::vector< unsigned char >();
+
+        std::ifstream icon_file( path, std::ios_base::binary );
+        if ( !icon_file )
+            return std::vector< unsigned char >();
+
+        icon_file.seekg(0,std::ios::end);
+        const auto length = icon_file.tellg();
+        icon_file.seekg(0,std::ios::beg);
+
+        std::vector< unsigned char > contents( length );
+        icon_file.read( reinterpret_cast<char*>(&contents[0]), length );
+
+        if ( icon_file.gcount() != length )
+            return std::vector< unsigned char >();
+
+        return contents;
+#   endif
 	}
 
-#   endif
 } // ns details
 
 
@@ -311,6 +333,9 @@ private:
     std::string m_title;
     std::string m_name;
     std::string m_version;
+
+    ///< Used on mac to store the path to the icon
+    std::string m_icon;
 };
 
 template< typename T >
@@ -324,6 +349,7 @@ process<T>::process( pid_t pid,
     , m_title( title )
     , m_name( name )
     , m_version( version )
+    , m_icon( "" )
 {
 }
 
@@ -334,6 +360,7 @@ process<T>::process( const pid_t pid )
     , m_title( "" )
     , m_name( "" )
     , m_version( "" )
+    , m_icon( "" )
 {
 #ifdef _WIN32
     if ( m_cmdline.empty() )
@@ -380,6 +407,7 @@ process<T>::process( const pid_t pid )
     assert( name    != nullptr );
     assert( version != nullptr );
     assert( path    != nullptr );
+    assert( icon    != nullptr );
 
     // RAII structures to make sure the memory is free when going out of scope
     std::unique_ptr< char, void (*)(void*) > title_ptr  ( title,   &std::free );
@@ -445,10 +473,11 @@ std::vector< unsigned char > process<T>::icon() const
 {
     assert( valid() );
 #ifdef _WIN32
-    return ps::details::get_icon_from_file( cmdline() );
+    const std::string & icon_file = cmdline();
 #else
-    return std::vector< unsigned char >();
+    const std::string & icon_file = m_icon;
 #endif
+    return ps::details::get_icon_from_file( icon_file );
 }
 
 template< typename T >
