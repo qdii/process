@@ -45,7 +45,9 @@ int get_desktop_applications( pid_t * pidArray,
 
 int get_info_from_pid( pid_t pid, char ** title,
                        char ** name,
-                       char ** version )
+                       char ** version,
+                       char ** icon,
+                       char ** path )
 {
     NSAutoreleasePool *p = [NSAutoreleasePool new];
 
@@ -66,15 +68,15 @@ int get_info_from_pid( pid_t pid, char ** title,
         return -2;
     }
 
-    NSString * path 
+    NSString * bundlePath 
         = (NSString*) CFDictionaryGetValue( dictionary, CFSTR("BundlePath") );
-    if ( !path )
+    if ( !bundlePath )
     {
         [ p release ];
         return -3;
     }
 
-    NSBundle * bundle = [NSBundle bundleWithPath:path];
+    NSBundle * bundle = [NSBundle bundleWithPath:bundlePath];
     if ( !bundle )
     {
         [ p release ];
@@ -99,12 +101,22 @@ int get_info_from_pid( pid_t pid, char ** title,
         NSString * data = [ infoDic valueForKey:@"CFBundleIdentifier"];
         *name = strdup( data ? [ data UTF8String ] : "" );
     }
+
     if (version)
     {
         NSString * data = [ infoDic valueForKey:@"CFBundleShortVersionString"];
         *version = strdup( data ? [ data UTF8String ] : "" );
     }
 
+    if (icon)
+    {
+        NSString * data = [ infoDic valueForKey:@"CFBundleIconFile"];
+        *icon = strdup( data ? [ data UTF8String ] : "" );
+    }
+
+    if (path)
+        *path = strdup( [ bundlePath UTF8String ] );
+ 
     [ p release ];
     return 0;
 }

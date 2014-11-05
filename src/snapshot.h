@@ -55,12 +55,7 @@ CONTAINER get_entries_from_window_manager()
         if ( pidArray[i] == INVALID_PID )
             continue;
 
-        processes.emplace_back( 
-                pidArray[i], 
-                get_cmdline_from_pid( pidArray[i] ),
-                bundleIdentifierArray[i],
-                bundleNameArray[i]
-        );
+        processes.emplace_back( pidArray[i] );
     }
 
 exit:

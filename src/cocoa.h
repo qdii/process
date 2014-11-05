@@ -13,6 +13,8 @@ int get_desktop_applications( pid_t * pidArray,
 int get_info_from_pid( pid_t pid,
                        char ** title,
                        char ** name,
-                       char ** version );
+                       char ** version,
+                       char ** icon,
+                       char ** path );
 
 #endif // PS_COCOA_H

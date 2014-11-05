@@ -80,7 +80,7 @@ bool test_version()
 
 bool test_title()
 {
-    // find at least one process which version is not null
+    // find at least one process which title is not null
     ps::snapshot<int> all_processes;
     return std::find_if(
         all_processes.cbegin(),
@@ -89,6 +89,16 @@ bool test_title()
     ) != all_processes.cend();
 }
 
+bool test_icon()
+{
+    // find at least one process which icon path is not null
+    ps::snapshot<int> all_processes;
+    return std::find_if(
+        all_processes.cbegin(),
+        all_processes.cend(),
+        []( const ps::process<int> &t ) { return !t.icon().empty(); } 
+    ) != all_processes.cend();
+}
 
 int main( int, char* argv[] )
 {
@@ -99,4 +109,5 @@ int main( int, char* argv[] )
     LAUNCH_TEST( test_bsd_processes );
     LAUNCH_TEST( test_version );
     LAUNCH_TEST( test_title );
+    LAUNCH_TEST( test_icon );
 }
