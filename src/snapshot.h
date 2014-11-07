@@ -73,7 +73,7 @@ CONTAINER get_entries_from_window_manager()
 
     for ( int i=0; i<success; ++i )
     {
-        if ( pidArray[i] == 0 )
+        if ( pidArray[i] == INVALID_PID )
             continue;
 
         processes.emplace_back( 
@@ -95,29 +95,42 @@ exit:
 #endif
 }
 
+static inline
+std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
+{
+    std::vector<pid_t> pids;
+    pids.resize( max_pids, INVALID_PID );
+
+#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+    proc_listpids( PROC_ALL_PIDS, 0,
+                   const_cast<pid_t*>(pids.data()),
+                   max_pids ) );
+#elif defined( _WIN32 ) || defined( _WIN64 )
+    DWORD nbBytes;
+    EnumProcesses( const_cast<pid_t*>(pids.data()), 
+                   max_pids * sizeof( pid_t ), &nbBytes );
+    pids.resize( nbBytes / sizeof( pid_t ) );
+#endif
+
+    return pids;
+}
+
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_syscall()
 {
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
-    std::vector< pid_t > bsd_processes;
-    const int length = proc_listpids( PROC_ALL_PIDS, 0, nullptr, 0 );
-    bsd_processes.resize( length );
-    const int success 
-        = proc_listpids( PROC_ALL_PIDS, 0,
-                         const_cast<pid_t*>(bsd_processes.data()),
-                         length );
+    const unsigned max_pids = proc_listpids( PROC_ALL_PIDS, 0, nullptr, 0 );
+#else
+    const unsigned max_pids = 500;
+#endif
 
-    if ( !success )
-        return CONTAINER();
+    std::vector<pid_t> running_pids 
+        = get_running_process_ids( max_pids );
 
     return CONTAINER(
-        bsd_processes.begin(),
-        std::remove( bsd_processes.begin(), bsd_processes.end(), 0 )
+        running_pids.begin(),
+        std::remove( running_pids.begin(), running_pids.end(), INVALID_PID )
     );
-
-#else
-    return CONTAINER();
-#endif
 }
 
 template < typename T > static
@@ -192,10 +205,10 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
 {
     CONTAINER all_processes;
 
-    if ( target_os() == LINUX )
+    if ( target_os() == OS_LINUX )
         all_processes = get_entries_from_procfs< CONTAINER, T >();
 
-    else if ( target_os() == MAC_OSX )
+    else if ( target_os() == OS_MAC_OSX )
     {
         if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
         { 
@@ -210,6 +223,9 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
         }
     }
 
+	else if ( target_os_windows() )
+		all_processes = get_entries_from_syscall< CONTAINER, T >();
+	
     return all_processes;
 }
 

@@ -15,7 +15,7 @@ inline
 std::string get_cmdline_from_pid( const pid_t pid )
 {
 #if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
-    if ( pid == 0 )
+    if ( pid == INVALID_PID )
         return "";
 
     std::string cmdline;
@@ -27,8 +27,25 @@ std::string get_cmdline_from_pid( const pid_t pid )
     
     cmdline.resize( ret );
     return cmdline; 
-#else
-    return "";
+#elif defined( _WIN32 ) || defined( _WIN64 )
+    handle process_handle( create_handle_from_pid( pid ) );
+
+    if ( process_handle == NULL )
+        return "";
+
+    std::unique_ptr<char[]> buffer( new char[MAX_PATH] );
+
+    const DWORD length 
+        = GetProcessImageFileNameA(
+            process_handle,
+            buffer.get(),
+            MAX_PATH);
+    
+    if ( length == 0 )
+        return "";
+
+    return convert_kernel_drive_to_msdos_drive( 
+        std::string( buffer.get(), buffer.get() + length ) );
 #endif
 }
 
@@ -61,8 +78,23 @@ std::string get_name_from_pid( const pid_t pid )
     std::string name( buffer );
     free( buffer );
     return name;
-#else
-    return "";
+#elif defined(_WIN32) || defined( _WIN64 )
+    handle process_handle( create_handle_from_pid( pid ) );
+        
+    HMODULE hMod;
+    DWORD cbNeeded;
+    std::unique_ptr<char[]> buffer( new char[MAX_PATH] );
+
+    if ( !EnumProcessModules( process_handle, 
+                              &hMod, sizeof(hMod), 
+                              &cbNeeded) )
+        return "";
+
+    
+    GetModuleBaseNameA( process_handle, hMod, buffer.get(), 
+                        MAX_PATH );
+
+    return std::string( buffer.get() );
 #endif
 }
 
@@ -143,7 +175,10 @@ process<T>::process( const pid_t pid )
 
 template< typename T >
 process<T>::process()
-    : process( 0, "" )
+    : m_pid( INVALID_PID )
+    , m_cmdline( "" )
+    , m_title( "" )
+    , m_name( "" )
 {
 }
 
@@ -171,7 +206,7 @@ std::string process<T>::name() const
 template< typename T >
 bool process<T>::valid() const
 {
-    return m_pid != 0;
+    return m_pid != INVALID_PID;
 }
 
 template< typename T >
