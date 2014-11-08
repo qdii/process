@@ -71,6 +71,29 @@ bool find_myself()
     ) != all_processes.cend();
 }
 
+bool test_version()
+{
+    // find at least one process which version is not null
+    ps::snapshot<int> all_processes;
+    return std::find_if(
+        all_processes.cbegin(),
+        all_processes.cend(),
+        []( const ps::process<int> &t ) { return !t.version().empty(); } 
+    ) != all_processes.cend();
+}
+
+bool test_title()
+{
+    // find at least one process which version is not null
+    ps::snapshot<int> all_processes;
+    return std::find_if(
+        all_processes.cbegin(),
+        all_processes.cend(),
+        []( const ps::process<int> &t ) { return !t.title().empty(); } 
+    ) != all_processes.cend();
+}
+
+
 int main( int, char* argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -78,4 +101,6 @@ int main( int, char* argv[] )
     LAUNCH_TEST( find_myself );
     LAUNCH_TEST( test_desktop_processes );
     LAUNCH_TEST( test_bsd_processes );
+    LAUNCH_TEST( test_version );
+    LAUNCH_TEST( test_title );
 }

@@ -16,6 +16,8 @@
 #include <sstream>
 #include <iterator>
 #include <assert.h>
+#include <tuple>
+#include <iomanip>
 
 #ifdef __APPLE__
 #   include <TargetConditionals.h>
