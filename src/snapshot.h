@@ -69,6 +69,29 @@ exit:
     
     return processes;
 
+#elif defined __linux && defined( PS_GNOME )
+    if (!gdk_init_check(NULL, NULL))
+        return CONTAINER();
+
+    WnckScreen * const screen
+        = wnck_screen_get_default ();
+
+    wnck_screen_force_update (screen);
+
+    CONTAINER processes;
+    for (GList * window_l = wnck_screen_get_windows (screen); window_l != NULL; window_l = window_l->next)
+    {
+        WnckWindow * window = WNCK_WINDOW(window_l->data);
+
+        const pid_t pid = wnck_window_get_pid( window );
+        processes.emplace_back(
+            pid,
+            get_cmdline_from_pid( pid ),
+            wnck_window_get_name( window )
+            );
+    }
+
+    return processes;
 #else
     return CONTAINER();
 #endif
@@ -184,15 +207,15 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
 {
     CONTAINER all_processes;
 
-    if ( target_os() == OS_LINUX )
-        all_processes = get_entries_from_procfs< CONTAINER, T >();
-
-    else if ( target_os() == OS_MAC_OSX )
+    if ( target_os() == OS_MAC_OSX || target_os() == OS_LINUX )
     {
         if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
         { 
             const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), bsd_processes.cbegin(),    bsd_processes.cend() );
+            all_processes.insert( all_processes.end(), bsd_processes.cbegin(), bsd_processes.cend() );
+
+            const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
+            all_processes.insert( all_processes.end(), procfs_entries.cbegin(), procfs_entries.cend() );
         }
 
         if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )

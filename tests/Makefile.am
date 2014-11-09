@@ -6,4 +6,9 @@ list_all_processes_LDFLAGS = $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_SYSTEM_LIBS)
 list_all_processes_DEPENDENCIES = $(top_builddir)/src/libprocess.la
 list_all_processes_LDADD = $(BOOST_FILESYSTEM_LIBS) $(BOOST_SYSTEM_LIBS) $(list_all_processes_DEPENDENCIES)
 
-
+if GNOME
+list_all_processes_CPPFLAGS += \
+	$(WNCK_CFLAGS)
+list_all_processes_LDADD += \
+	$(WNCK_LIBS)
+endif

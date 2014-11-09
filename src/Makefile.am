@@ -11,8 +11,15 @@ libprocess_la_LDFLAGS = \
 	-framework AppKit \
 	-framework Foundation
 
+libprocess_la_CPPFLAGS =
+
 if COCOA
 libprocess_la_SOURCES += \
 	cocoa.mm \
 	cocoa.h
+endif
+
+if GNOME
+libprocess_la_CPPFLAGS += \
+	$(WNCK_CFLAGS)
 endif

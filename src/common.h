@@ -33,6 +33,11 @@
 #	include <pwd.h>
 #endif
 
+#ifdef PS_GNOME
+#   define WNCK_I_KNOW_THIS_IS_UNSTABLE
+#   include <libwnck/libwnck.h>
+#endif
+
 #ifdef BOOST_NO_CXX11_CONSTEXPR
 #	define PS_CONSTEXPR const
 #else
