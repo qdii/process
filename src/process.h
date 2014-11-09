@@ -38,8 +38,9 @@ std::string get_specific_file_info(
            &size 
        ))
        return "";
+    assert( size != 0 );
 
-    return std::string( info, info+size );
+    return std::string( info, size-1 );
 }
 
 static inline
