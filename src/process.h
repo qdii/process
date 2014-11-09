@@ -70,8 +70,8 @@ get_file_info( const std::string & path )
                   &size);
 
     std::tuple< std::string, std::string, std::string > ret;
-    std::get<details::NAME>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName" );
-    std::get<details::TITLE>( ret ) = ""; 
+    std::get<details::NAME>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "InternalName" );
+    std::get<details::TITLE>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName" ); 
     std::get<details::VERSION>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
 
     return ret;
