@@ -30,6 +30,29 @@ public:
     explicit snapshot( flags = ENUMERATE_ALL );
 };
 
+#if defined(WIN32)
+
+template<typename T> static
+BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
+{
+    if ( !param )
+        return FALSE;
+
+    std::vector< pid_t > & process_container
+        = *reinterpret_cast< std::vector< pid_t >* >( param );
+
+    pid_t pid;
+    const auto threadId 
+        = GetWindowThreadProcessId( GetTopWindow( window_handle ), &pid );
+
+    if ( threadId != 0 )
+        process_container.push_back( pid );
+
+    return TRUE;
+}
+#endif
+
+
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_window_manager()
 {
@@ -87,8 +110,17 @@ exit:
     }
 
     return processes;
-#else
-    return CONTAINER();
+#elif defined(WIN32)
+    std::vector< pid_t > pids;
+    if ( !EnumWindows( &find_pid_from_window<T>, reinterpret_cast<LPARAM>(&pids) ) )
+        return CONTAINER();
+
+    CONTAINER processes;
+
+    for ( const pid_t pid : pids )
+        processes.emplace_back( pid );
+    
+    return processes;
 #endif
 }
 
@@ -224,7 +256,19 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
     }
 
 	else if ( target_os_windows() )
-		all_processes = get_entries_from_syscall< CONTAINER, T >();
+    {
+        if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
+        {
+            const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
+            all_processes.insert( all_processes.end(), gui_applications.cbegin(), gui_applications.cend() );
+        }
+
+        if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
+        {
+		    const CONTAINER regular_processes = get_entries_from_syscall< CONTAINER, T >();
+            all_processes.insert( all_processes.end(), regular_processes.cbegin(), regular_processes.cend() );
+        }
+    }
 	
     return all_processes;
 }

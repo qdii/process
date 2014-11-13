@@ -43,40 +43,6 @@ std::string get_specific_file_info(
 
     return std::string( info, size-1 );
 }
-
-static inline
-std::tuple< std::string, std::string, std::string, std::string >
-get_file_info( const std::string & path )
-{
-    if ( path.empty() )
-        return std::tuple< std::string, std::string, std::string, std::string >();
-
-    unsigned size = GetFileVersionInfoSize( path.c_str(), 0 );
-    if ( !size )
-        return std::tuple< std::string, std::string, std::string, std::string >();
-
-    std::unique_ptr< unsigned char[] > data( new unsigned char[size] );
-    if (!GetFileVersionInfo( path.c_str(), 0, size, data.get() ))
-        return std::tuple< std::string, std::string, std::string, std::string >();
-
-    struct LANGANDCODEPAGE 
-    {
-      WORD language;
-      WORD codepage;
-    } * translate;
-
-    VerQueryValue(data.get(), 
-                  "\\VarFileInfo\\Translation",
-                  reinterpret_cast<LPVOID*>(&translate),
-                  &size);
-
-    std::tuple< std::string, std::string, std::string, std::string > ret;
-    std::get<details::NAME>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "InternalName" );
-    std::get<details::TITLE>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName" ); 
-    std::get<details::VERSION>( ret ) = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
-
-    return ret;
-}
 #endif
 
 inline
@@ -132,79 +98,6 @@ std::string get_icon_path_from_icon_name( std::string bundle_path,
 }
 #endif
 
-static inline
-std::tuple< std::string, std::string, std::string, std::string >
-get_file_info( const pid_t pid )
-{
-#if defined(WIN32)
-    return get_file_info( get_cmdline_from_pid( pid ) );
-#elif defined(__APPLE__) && defined(TARGET_OS_MAC)
-    char * title,
-         * name,
-         * version,
-         * icon,
-         * path;
-    const int success = 
-        get_info_from_pid( pid, &title, &name, &version, &icon, &path );
-
-    if ( success != 0 )
-        return std::tuple< std::string, std::string, std::string, std::string >();
-
-    assert( title   != nullptr );
-    assert( name    != nullptr );
-    assert( version != nullptr );
-    assert( icon    != nullptr );
-    assert( path    != nullptr );
-
-    // RAII structures to make sure the memory is free when going out of scope
-    std::unique_ptr< char, void (*)(void*) > title_ptr  ( title,   &std::free );
-    std::unique_ptr< char, void (*)(void*) > name_ptr   ( name,    &std::free );
-    std::unique_ptr< char, void (*)(void*) > version_ptr( version, &std::free );
-    std::unique_ptr< char, void (*)(void*) > icon_ptr   ( icon,    &std::free );
-    std::unique_ptr< char, void (*)(void*) > path_ptr   ( path,    &std::free );
-
-    std::tuple< std::string, std::string, std::string, std::string > file_info;
-    std::get<details::NAME>( file_info ).assign( name );
-    std::get<details::TITLE>( file_info ).assign( title );
-    std::get<details::VERSION>( file_info ).assign( version ); 
-
-    std::string bundle_path( path );
-    std::string icon_name( icon );
-
-    if ( !bundle_path.empty() && !icon_name.empty() )
-        std::get<details::ICON>( file_info ).assign( 
-            get_icon_path_from_icon_name( std::move( bundle_path ), 
-                                          std::move( icon_name ) ) ); 
-
-    return file_info;
-#else
-    return std::tuple< std::string, std::string, std::string, std::string >();
-#endif
-}
-
-static inline
-std::string get_title_from_pid( const pid_t pid )
-{
-    return std::get<details::TITLE>( get_file_info( pid ) );
-}
-
-static inline
-std::string get_name_from_pid( const pid_t pid )
-{
-    return std::get<details::NAME>( get_file_info( pid ) );
-}
-
-static inline
-std::string get_icon_from_pid( const pid_t pid )
-{
-    return std::get<details::ICON>( get_file_info( pid ) );
-}
-
-static inline
-std::string get_version_from_pid( const pid_t pid )
-{
-    return std::get<details::VERSION>( get_file_info( pid ) );
-}
 
 /* @brief Describes a process */
 template< typename T >
@@ -220,6 +113,7 @@ struct process
              const std::string & version = "",
              const std::string & icon = "" );
 
+    /**@brief Creates an invalid process */
     process();
     ~process();
 
@@ -276,11 +170,77 @@ template< typename T >
 process<T>::process( const pid_t pid )
     : m_pid( pid )
     , m_cmdline( get_cmdline_from_pid( pid ) )
-    , m_title( get_title_from_pid( pid ) )
-    , m_name( get_name_from_pid( pid ) )
-    , m_version( get_version_from_pid( pid ) )
-    , m_icon( get_icon_from_pid( pid ) )
+    , m_title( "" )
+    , m_name( "" )
+    , m_version( "" )
+    , m_icon( "" )
 {
+#ifdef _WIN32
+    if ( m_cmdline.empty() )
+        return;
+
+    unsigned size = GetFileVersionInfoSize( m_cmdline.c_str(), 0 );
+    if ( !size )
+        return;
+
+    std::unique_ptr< unsigned char[] > data( new unsigned char[size] );
+    if (!GetFileVersionInfo( m_cmdline.c_str(), 0, size, data.get() ))
+        return;
+
+    struct LANGANDCODEPAGE 
+    {
+      WORD language;
+      WORD codepage;
+    } * translate;
+
+    if ( !VerQueryValue(data.get(), 
+                        "\\VarFileInfo\\Translation",
+                        reinterpret_cast<LPVOID*>(&translate),
+                        &size) )
+        return;
+
+    m_name      = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "InternalName"      );
+    m_title     = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName"       ); 
+    m_version   = get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion"    );
+
+#elif defined(__APPLE__) && defined(TARGET_OS_MAC)
+
+    char * title,
+         * name,
+         * version,
+         * icon,
+         * path;
+    const int success = 
+        get_info_from_pid( pid, &title, &name, &version, &icon, &path );
+
+    if ( success != 0 )
+        return;
+
+    assert( title   != nullptr );
+    assert( name    != nullptr );
+    assert( version != nullptr );
+    assert( icon    != nullptr );
+    assert( path    != nullptr );
+
+    // RAII structures to make sure the memory is free when going out of scope
+    std::unique_ptr< char, void (*)(void*) > title_ptr  ( title,   &std::free );
+    std::unique_ptr< char, void (*)(void*) > name_ptr   ( name,    &std::free );
+    std::unique_ptr< char, void (*)(void*) > version_ptr( version, &std::free );
+    std::unique_ptr< char, void (*)(void*) > icon_ptr   ( icon,    &std::free );
+    std::unique_ptr< char, void (*)(void*) > path_ptr   ( path,    &std::free );
+
+    m_name.assign( name );
+    m_title.assign( title );
+    m_version.assign( version ); 
+
+    std::string bundle_path( path );
+    std::string icon_name( icon );
+
+    if ( !bundle_path.empty() && !icon_name.empty() )
+        m_icon.assign( 
+            get_icon_path_from_icon_name( std::move( bundle_path ), 
+                                          std::move( icon_name ) ) ); 
+#endif
 }
 
 template< typename T >
