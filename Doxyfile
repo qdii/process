@@ -1,0 +1,7 @@
+PROJECT_NAME           = "libprocess"
+PROJECT_BRIEF          = "A library that enumerates running processes"    #A one line description of your project
+OUTPUT_DIRECTORY       = "doc"
+INPUT                  = include/
+FILE_PATTERNS          = *.h *.cpp
+RECURSIVE              = YES
+

@@ -8,6 +8,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign])
 LT_INIT
+DX_INIT_DOXYGEN([process])
 
 AC_ARG_ENABLE( [cocoa], 
                [AS_HELP_STRING([enable listing Cocoa application])],
