@@ -45,7 +45,9 @@
 
 #if defined( WIN32 ) || defined( WIN64 )
 #	include <windows.h>
+#   include <gdiplus.h>
 #   include <psapi.h>
+#   include <codecvt>
 typedef DWORD pid_t;
 #endif
 

@@ -91,7 +91,7 @@ bool test_title()
 
 bool test_icon()
 {
-    // find at least one process which icon path is not null
+    // find at least one process which icon is not an empty array
     ps::snapshot<int> all_processes;
     return std::find_if(
         all_processes.cbegin(),
