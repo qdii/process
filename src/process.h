@@ -247,6 +247,11 @@ struct process
     process();
     ~process();
 
+    process( const process & ) = default;
+    process( process && ) = default;
+    process & operator=( const process & ) = default;
+    process & operator=( process && ) = default;
+
     /**@brief This is the name that makes most sense to a human
      *        It could be the title bar, or the product name as
      *        advertized by its creator */
@@ -415,7 +420,11 @@ template< typename T >
 std::vector< unsigned char > process<T>::icon() const
 {
     assert( valid() );
+#ifdef _WIN32
     return ps::details::get_icon_from_file( cmdline() );
+#else
+    return std::vector< unsigned char >();
+#endif
 }
 
 template< typename T >

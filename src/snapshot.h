@@ -56,8 +56,8 @@ BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_window_manager()
 {
-#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     CONTAINER processes;
+#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
     const int nbApplications =
         get_desktop_applications( nullptr, nullptr, nullptr, 0 );
 
@@ -84,24 +84,27 @@ CONTAINER get_entries_from_window_manager()
 exit:
     std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(), &free );
     std::for_each( bundleNameArray.begin(), bundleNameArray.end(), &free );
-    
-    return processes;
 
 #elif defined __linux && defined( PS_GNOME )
     if (!gdk_init_check(NULL, NULL))
         return CONTAINER();
 
     WnckScreen * const screen
-        = wnck_screen_get_default ();
+        = wnck_screen_get_default();
 
-    wnck_screen_force_update (screen);
+    if ( !screen )
+        return CONTAINER();
 
-    CONTAINER processes;
+    wnck_screen_force_update(screen);
+
     for (GList * window_l = wnck_screen_get_windows (screen); window_l != NULL; window_l = window_l->next)
     {
         WnckWindow * window = WNCK_WINDOW(window_l->data);
+        if (!window)
+            continue;
 
         const pid_t pid = wnck_window_get_pid( window );
+        assert( pid != ps::INVALID_PID );
         processes.emplace_back(
             pid,
             get_cmdline_from_pid( pid ),
@@ -109,19 +112,16 @@ exit:
             );
     }
 
-    return processes;
 #elif defined(WIN32)
     std::vector< pid_t > pids;
     if ( !EnumWindows( &find_pid_from_window<T>, reinterpret_cast<LPARAM>(&pids) ) )
         return CONTAINER();
 
-    CONTAINER processes;
-
     for ( const pid_t pid : pids )
         processes.emplace_back( pid );
     
-    return processes;
 #endif
+    return processes;
 }
 
 static inline

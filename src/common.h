@@ -51,6 +51,12 @@
 typedef DWORD pid_t;
 #endif
 
+#ifdef _WIN32
+#   define PS_NOEXCEPT
+#else
+#   define PS_NOEXCEPT noexcept
+#endif
+
 namespace ps
 {
 struct cannot_find_icon : std::exception
@@ -60,7 +66,7 @@ struct cannot_find_icon : std::exception
     {
     }
 
-    const char * what() const override
+    const char * what() const PS_NOEXCEPT override
     {
         return error_message.c_str();
     }
@@ -234,6 +240,7 @@ bool target_os_windows()
     return target_os() == OS_WIN32 || target_os() == OS_WIN64;
 }
 
+#ifdef _WIN32
 struct input_stream
 {
     input_stream()
@@ -353,6 +360,7 @@ struct gdiplus_context
 private:
     ULONG_PTR m_token;
 };
+#endif //_WIN32
 
 } // namespace details
 } // namespace ps
