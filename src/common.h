@@ -53,7 +53,26 @@ typedef DWORD pid_t;
 
 namespace ps
 {
-    static PS_CONSTEXPR pid_t INVALID_PID = 0;
+struct cannot_find_icon : std::exception
+{
+    cannot_find_icon( const char * file_name )
+        : error_message( std::string("cannot find icon for path: \"") + file_name + "\"" )
+    {
+    }
+
+    const char * what() const override
+    {
+        return error_message.c_str();
+    }
+private:
+    std::string error_message;
+};
+
+static PS_CONSTEXPR pid_t INVALID_PID = 0;
+
+namespace details
+{
+    
 enum OS
 {
     OS_WIN32,
@@ -215,5 +234,126 @@ bool target_os_windows()
     return target_os() == OS_WIN32 || target_os() == OS_WIN64;
 }
 
+struct input_stream
+{
+    input_stream()
+        : m_istream( nullptr )
+    {
+        auto created =
+            CreateStreamOnHGlobal( NULL, TRUE, &m_istream );
+
+        if ( created == E_OUTOFMEMORY )
+            throw std::bad_alloc();
+
+        assert( created != E_INVALIDARG );
+    }
+
+    operator IStream*() { return m_istream; }
+    operator const IStream*() const { return m_istream; }
+
+    HGLOBAL get_hglobal()
+    {
+        HGLOBAL hglobal = 0;
+        auto success = GetHGlobalFromStream( m_istream, &hglobal );
+        assert( success == S_OK );
+        return hglobal;
+    }
+
+    ~input_stream()
+    {
+        m_istream->Release();
+    }
+
+private:
+    IStream * m_istream;
+};
+
+struct cannot_lock_hglobal : std::exception
+{
+    const char * what() const override
+    {
+        return "Cannot lock HGLOBAL";
+    }
+};
+
+struct hglobal_lock
+{
+    hglobal_lock( HGLOBAL hglobal )
+        : m_hglobal( hglobal )
+        , m_is_locked( false )
+    {
+    }
+
+    void * lock()
+    {
+        assert( !m_is_locked );
+        void * const mem = GlobalLock( m_hglobal );
+        m_is_locked = (mem != nullptr);
+        return mem;
+    }
+
+    void unlock()
+    {
+        if ( m_is_locked )
+        {
+            GlobalUnlock( m_hglobal );
+            assert( GetLastError() == NO_ERROR );
+            m_is_locked = false;
+        }
+    }
+
+    ~hglobal_lock()
+    {
+        unlock();
+    }
+
+private:
+    HGLOBAL     m_hglobal;
+    bool        m_is_locked;
+};
+
+struct hicon
+{
+    explicit
+    hicon( const std::string & path )
+    {
+    	if( !SHGetFileInfo( path.c_str(), 0, &m_file_info, sizeof(m_file_info),
+                            SHGFI_ICON|SHGFI_LARGEICON ) )
+        {
+            throw cannot_find_icon( path.c_str() );
+        }
+    }
+
+    operator HICON() const
+    {
+        return m_file_info.hIcon;
+    }
+
+    ~hicon()
+    {
+        DestroyIcon( m_file_info.hIcon );
+    }
+
+private:
+    SHFILEINFO m_file_info;
+};
+
+struct gdiplus_context
+{
+    gdiplus_context()
+    {
+        Gdiplus::GdiplusStartupInput input;
+        Gdiplus::GdiplusStartup( &m_token, &input, NULL );
+    }
+
+    ~gdiplus_context()
+    {
+        Gdiplus::GdiplusShutdown( m_token );
+    }
+private:
+    ULONG_PTR m_token;
+};
+
+} // namespace details
 } // namespace ps
 #endif // PS_COMMON_H

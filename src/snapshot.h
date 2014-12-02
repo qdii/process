@@ -232,6 +232,7 @@ CONTAINER get_entries_from_procfs()
 template< typename CONTAINER, typename T >
 CONTAINER capture_processes( typename snapshot<T>::flags flags )
 {
+    using namespace ps::details;
     CONTAINER all_processes;
 
     if ( target_os() == OS_MAC_OSX || target_os() == OS_LINUX )
