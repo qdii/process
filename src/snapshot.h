@@ -27,6 +27,7 @@ public:
         ENUMERATE_ALL          = 0x3,
     };
 
+    /**@brief Takes a snapshot of all running processes */
     explicit snapshot( flags = ENUMERATE_ALL );
 };
 

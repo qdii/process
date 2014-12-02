@@ -232,11 +232,24 @@ std::string get_icon_path_from_icon_name( std::string bundle_path,
 
 /* @brief Describes a process */
 template< typename T >
+
+/**@struct process
+ * @brief describes a process */
 struct process
 {
+    /**@brief Constructs a process from the given pid
+     *
+     * This constructor will automatically try and retrieve the data for 
+     * title, name, etc. from the pid
+     * @param[in] pid The process id given by the OS */
     explicit
     process( pid_t pid );
 
+    /**@brief Constructs a process, and manually assign all the information to it
+     * @param[in] cmdline The absolute path to the binary executable 
+     * @param[in] title The title of the process. The most human-friendly one. Like "Skype".
+     * @param[in] name The name of the process, as perceived by the OS. Could be something like Microsoft.Skype
+     * @param[in] version The version being run */
     process( pid_t pid, 
              const std::string & cmdline,
              const std::string & title   = "",
@@ -245,11 +258,20 @@ struct process
 
     /**@brief Creates an invalid process */
     process();
+
+    /**@brief Destructs this object. Does not kill or terminate the running process though */
     ~process();
 
+    /**@brief Constructs a copy of a process */
     process( const process & ) = default;
+
+    /**@brief Move-constructs a process */
     process( process && ) = default;
+
+    /**@brief Assigns a copy of a process */
     process & operator=( const process & ) = default;
+
+    /**@brief Move-assigns a copy of a process */
     process & operator=( process && ) = default;
 
     /**@brief This is the name that makes most sense to a human
@@ -261,6 +283,7 @@ struct process
     std::string cmdline() const;
 
     /**@brief Returns the name of the application as seen by the OS
+     *
      * For instance, on linux it could be "gnu-tar" */
     std::string name() const;
     
@@ -268,11 +291,12 @@ struct process
     std::string version() const;
 
     /**@brief Returns the main icon of the process
-    On Windows, this function returns a PNG file.
-    On Mac, this function returns a ICNS file.
-    @warning This function is SLOW. 
+     *
+     * On Windows, this function returns a PNG file.
+     * On Mac, this function returns a ICNS file.
+     * @warning This function is SLOW. 
              It reads from the disk and perform all sorts of slow things.
-    @throw cannot_find_icon When file information from the executable cannot be accessed. */
+     * @throw cannot_find_icon When file information from the executable cannot be accessed. */
     std::vector< unsigned char > icon() const;
 
     /**@brief Checks whether this object is valid and describes
