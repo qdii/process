@@ -4,7 +4,7 @@
 #include "../src/process.h"
 #include "../src/snapshot.h"
 #include "../src/cocoa.h"
-#ifdef __linux
+#if defined __linux || defined __APPLE__
 #include <signal.h>
 #endif
 
@@ -13,7 +13,7 @@
 
 static std::string own_name;
 
-#ifdef __linux
+#if defined __linux || defined __APPLE__
 static volatile bool signaled = false;
 void sig_handler(int signo)
 {
@@ -114,7 +114,7 @@ bool test_icon()
 
 bool test_soft_kill()
 {
-#ifdef __linux
+#if defined __linux || defined __APPLE__
     // try to kill oneself but catch the signal when it arrives
     signal( SIGTERM, sig_handler );
     ps::snapshot<int> all_processes;
@@ -134,7 +134,7 @@ bool test_soft_kill()
 
 bool test_hard_kill()
 {
-#ifdef __linux
+#if defined __linux
     const pid_t pid = fork();
     if ( pid == 0 )
     {

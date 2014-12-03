@@ -352,7 +352,7 @@ template< typename T >
 int process<T>::kill( const bool softly ) const
 {
     assert( valid() );
-#ifdef __linux
+#if defined __linux || defined __APPLE__
     const int killed = ::kill( m_pid, softly ? SIGTERM : SIGKILL );
 
     if ( killed == EPERM )

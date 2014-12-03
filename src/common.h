@@ -24,6 +24,7 @@
 #       include <sys/proc_info.h>
 #       include <sys/sysctl.h>
 #       include <libproc.h>
+#       include <signal.h>
 #   endif
 #endif
 
