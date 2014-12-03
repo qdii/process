@@ -192,6 +192,60 @@ namespace details
         return std::vector< unsigned char >();
 	}
 
+    std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
+    {
+        std::vector< unsigned char > contents;
+
+#   if defined __linux && defined PS_GNOME
+        if (!gdk_init_check(NULL, NULL))
+            return std::vector<unsigned char>();
+
+        WnckScreen * const screen
+            = wnck_screen_get_default();
+
+        if ( !screen )
+            return std::vector<unsigned char>();
+
+        wnck_screen_force_update(screen);
+
+        for (GList * window_l = wnck_screen_get_windows (screen); window_l != NULL; window_l = window_l->next)
+        {
+            WnckWindow * window = WNCK_WINDOW(window_l->data);
+            if (!window)
+                continue;
+
+            const pid_t window_pid = wnck_window_get_pid( window );
+            if ( window_pid != pid )
+                continue;
+
+            GdkPixbuf * const icon = wnck_window_get_icon( window );
+            if ( !icon )
+                continue;
+
+            gchar * buffer    = nullptr;
+            gsize buffer_size = 0;
+            GError * error    = nullptr;
+
+            const auto saved =
+                gdk_pixbuf_save_to_buffer( icon, &buffer, &buffer_size, "png", &error, NULL );
+ 
+            if ( saved )
+            {
+                try
+                {
+                    contents.assign( buffer, buffer + buffer_size );
+                } catch( ... )
+                {
+                }
+                g_free( buffer );
+            }
+
+            break;
+        }
+#   endif
+        return contents;
+    }
+
 } // ns details
 
 
@@ -470,12 +524,16 @@ template< typename T >
 std::vector< unsigned char > process<T>::icon() const
 {
     assert( valid() );
-#ifdef _WIN32
+#if defined _WIN32 || defined __APPLE__
+#   ifdef _WIN32
     const std::string & icon_file = cmdline();
-#else
+#   else
     const std::string & icon_file = m_icon;
-#endif
+#   endif
     return ps::details::get_icon_from_file( icon_file );
+#else
+    return ps::details::get_icon_from_pid( pid() );
+#endif
 }
 
 template< typename T >
