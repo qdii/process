@@ -18,9 +18,8 @@ int main()
 
         if ( icon_data.empty() )
         {
-            std::cout << "warning: empty icon file for pid: "
-                      << p.pid() << ", and cmdline: \""
-                      << p.cmdline() << "\"\n";
+            std::cout << "warning: empty icon file for: ";
+            ps::describe( std::cout, p );
             continue;
         }
 
