@@ -24,10 +24,11 @@ AM_CONDITIONAL([GNOME],[test "x$gnome" = "xtrue"])
 AC_PROG_CXX
 AC_PROG_OBJC
 AC_PROG_OBJCXX
-
+AC_LANG_PUSH([Objective C])
 AC_CHECK_HEADERS([Foundation/Foundation.h])
 AC_CHECK_HEADERS([AppKit/NSRunningApplication.h])
 AC_CHECK_HEADERS([AppKit/NSWorkspace.h])
+AC_LANG_POP
 
 if test "x$gnome" = "xtrue"; then
     CPPFLAGS="$CPPFLAGS -DPS_GNOME"
