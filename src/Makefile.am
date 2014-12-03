@@ -5,7 +5,8 @@ AM_LIBTOOLFLAGS = --tag=CC
 libprocess_la_SOURCES = \
 	common.h \
 	process.h \
-	snapshot.h
+	snapshot.h \
+	icon.h
 
 libprocess_la_LDFLAGS = \
 	-framework AppKit \

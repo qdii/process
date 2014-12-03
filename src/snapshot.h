@@ -7,6 +7,7 @@
 #endif
 #include "process.h"
 #include "cocoa.h"
+#include "icon.h"
 
 namespace ps
 {
