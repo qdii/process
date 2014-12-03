@@ -172,6 +172,11 @@ struct process
 
     pid_t pid() const { return m_pid; }
 
+    /**@brief Kills the process
+     * @param[in] softly When set to true, calling this method will only notify the process that it should terminate. Otherwise it will send a fatal signal
+     * @return 0 on success, -1 if insufficient privileges, -2 if the process could not be found */
+    int kill( bool softly ) const;
+
 private:
     pid_t       m_pid;
     std::string m_cmdline;
@@ -341,6 +346,24 @@ template< typename T >
 bool process<T>::valid() const
 {
     return m_pid != INVALID_PID;
+}
+
+template< typename T >
+int process<T>::kill( const bool softly ) const
+{
+    assert( valid() );
+#ifdef __linux
+    const int killed = ::kill( m_pid, softly ? SIGTERM : SIGKILL );
+
+    if ( killed == EPERM )
+        return -1;
+
+    if ( killed == ESRCH )
+        return -2;
+
+    assert( killed == 0 );
+#endif
+    return 0;
 }
 
 template< typename T >
