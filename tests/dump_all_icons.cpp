@@ -17,7 +17,12 @@ int main()
         std::vector< unsigned char > icon_data = p.icon();
 
         if ( icon_data.empty() )
+        {
+            std::cout << "warning: empty icon file for pid: "
+                      << p.pid() << ", and cmdline: \""
+                      << p.cmdline() << "\"\n";
             continue;
+        }
 
         std::ofstream( p.title() + extension, std::ios_base::binary )
             .write( reinterpret_cast< char* >(&icon_data[0]), icon_data.size() );
