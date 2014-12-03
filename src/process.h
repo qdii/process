@@ -170,8 +170,6 @@ namespace details
             // if we cannot lock memory, we are screwed
             // ... but we still exit gracefully
         }
-
-        return std::vector<unsigned char>();
 #   elif defined __APPLE__ && defined TARGET_OS_MAC
         if ( path.empty() )
             return std::vector< unsigned char >();
@@ -187,11 +185,11 @@ namespace details
         std::vector< unsigned char > contents( length );
         icon_file.read( reinterpret_cast<char*>(&contents[0]), length );
 
-        if ( icon_file.gcount() != length )
-            return std::vector< unsigned char >();
-
-        return contents;
+        if ( icon_file.gcount() == length )
+            return contents;
 #   endif
+
+        return std::vector< unsigned char >();
 	}
 
 } // ns details
