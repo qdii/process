@@ -293,13 +293,26 @@ std::string get_cmdline_from_pid( const pid_t pid )
 
 #if defined(__APPLE__) && defined(TARGET_OS_MAC)
 static inline
+bool string_ends_in( const std::string & str, const std::string & suffix )
+{
+    return str.find( suffix ) + suffix.size() == str.size();
+}
+
+static inline
 std::string get_icon_path_from_icon_name( std::string bundle_path, 
                                           std::string icon_name )
 {
     assert( !bundle_path.empty() );
     assert( !icon_name.empty() );
-    return bundle_path + "/Contents/Resources/" + icon_name + 
-        (( icon_name.find( ".icns" ) + 5 != icon_name.size() ) ? ".icns" : "");
+    std::string resources_folder = bundle_path + "/Contents/Resources/";
+
+    // sometimes the file is already in PNG format
+    if ( string_ends_in( icon_name, ".png" ) 
+            || string_ends_in( icon_name, ".icns" )
+            || string_ends_in( icon_name, ".PNG" ) )
+       return resources_folder + icon_name;
+
+    return bundle_path + "/Contents/Resources/" + icon_name + ".icns";
 }
 #endif
 
