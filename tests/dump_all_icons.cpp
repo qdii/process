@@ -14,10 +14,12 @@ int main()
     ps::snapshot<int> all_processes;
     for ( const ps::process<int> & p : all_processes )
     {
-        std::string filename = p.title() + extension;
-        std::ofstream icon_file( filename, std::ios_base::binary );
-
         std::vector< unsigned char > icon_data = p.icon();
-        icon_file.write( reinterpret_cast< char* >(&icon_data[0]), icon_data.size() );
+
+        if ( icon_data.empty() )
+            continue;
+
+        std::ofstream( p.title() + extension, std::ios_base::binary )
+            .write( reinterpret_cast< char* >(&icon_data[0]), icon_data.size() );
     }
 }
