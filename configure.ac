@@ -11,7 +11,7 @@ LT_INIT
 DX_INIT_DOXYGEN([process])
 
 AC_ARG_ENABLE( [cocoa], 
-               [AS_HELP_STRING([enable listing Cocoa application])],
+               [AS_HELP_STRING([--enable-cocoa],[enable listing Cocoa application])],
                [case "${enableval}" in
                     yes) cocoa=true ;;
                     no)  cocoa=false ;;
@@ -21,7 +21,7 @@ AC_ARG_ENABLE( [cocoa],
 AM_CONDITIONAL([COCOA],[test "x$cocoa" = "xtrue"])
 
 AC_ARG_ENABLE( [gnome],
-               [AS_HELP_STRING([enable listing Gnome applications])],
+               [AS_HELP_STRING([--enable-gnome],[enable listing Gnome applications])],
                [case "${enableval}" in
                     yes) gnome=true ;;
                     no)  gnome=false ;;
