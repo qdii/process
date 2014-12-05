@@ -34,6 +34,7 @@ AX_APPEND_LINK_FLAGS(["-framework AppKit"])
 AX_APPEND_LINK_FLAGS(["-framework Foundation"])
 AC_LANG_POP
 
+AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([windows.h])
 AC_CHECK_HEADERS([gdiplus.h])
@@ -54,7 +55,13 @@ AC_CHECK_HEADERS([fstream])
 AC_CHECK_HEADERS([vector])
 AC_CHECK_HEADERS([memory])
 AC_CHECK_FUNCS([kill])
-AC_CHECK_FUNCS([std::move])
+AC_COMPILE_IFELSE(
+   [AC_LANG_PROGRAM(
+                    [[#include <utility>]],
+                    [[int main() { return ::std::move(1); }    ]]
+                  )],
+   [AC_DEFINE([HAVE_STD__MOVE],[1],[Defined to 1 if std::move is available])])
+
 
 AC_CHECK_TYPES([pid_t])
 AC_CHECK_TYPES([unique_ptr],[],[],[[#include <memory>
@@ -66,7 +73,6 @@ if test "x$gnome" = "xtrue"; then
     PKG_CHECK_MODULES([WNCK],[libwnck-3.0])
 fi
 
-AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # Checks for libraries.
 BOOST_REQUIRE([1.51])
 BOOST_SYSTEM
