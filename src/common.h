@@ -60,19 +60,20 @@
 #   include <signal.h>
 #endif
 
-
-#ifdef __APPLE__
-#   include <TargetConditionals.h>
-#   ifdef TARGET_OS_MAC
-#       include <sys/proc_info.h>
-#       include <sys/sysctl.h>
-#       include <libproc.h>
-#   endif
+#if HAVE_PWD_H
+#   include <pwd.h>
 #endif
 
-#ifdef __unix
-#	include <sys/sysctl.h>
-#	include <pwd.h>
+#if HAVE_SYS_SYSCTL_H
+#   include <sys/sysctl.h>
+#endif
+
+#if HAVE_LIBPROC_H
+#   include <libproc.h>
+#endif
+
+#if HAVE_SYS_PROC_INFO_H
+#   include <sys/proc_info.h>
 #endif
 
 #ifdef PS_GNOME

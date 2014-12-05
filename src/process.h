@@ -49,7 +49,7 @@ inline
 std::string get_cmdline_from_pid( const pid_t pid )
 {
     using namespace ps::details;
-#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
+#if HAVE_LIBPROC_H
     if ( pid == INVALID_PID )
         return "";
 
@@ -62,7 +62,7 @@ std::string get_cmdline_from_pid( const pid_t pid )
     
     cmdline.resize( ret );
     return cmdline; 
-#elif defined( _WIN32 ) || defined( _WIN64 )
+#elif HAVE_PSAPI_H
     handle process_handle( create_handle_from_pid( pid ) );
 
     if ( process_handle == NULL )
@@ -299,6 +299,9 @@ process<T>::process( const pid_t pid )
 
 #elif defined(__APPLE__) && defined(TARGET_OS_MAC)
 
+    m_pid     = pid;
+    m_cmdline = get_cmdline_from_pid( pid );
+
     unique_ptr< char, void (*)(void*) > title_ptr   ( nullptr, &std::free );
     unique_ptr< char, void (*)(void*) > name_ptr    ( nullptr, &std::free );
     unique_ptr< char, void (*)(void*) > version_ptr ( nullptr, &std::free );
@@ -340,7 +343,6 @@ process<T>::process( const pid_t pid )
             get_icon_path_from_icon_name( bundle_path, 
                                           icon_name ) ); 
 
-    m_pid = pid;
     m_name.swap( name_str );
     m_title.swap( title_str );
     m_version.swap( version_str );

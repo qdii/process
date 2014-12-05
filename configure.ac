@@ -54,6 +54,10 @@ AC_CHECK_HEADERS([string])
 AC_CHECK_HEADERS([fstream])
 AC_CHECK_HEADERS([vector])
 AC_CHECK_HEADERS([memory])
+AC_CHECK_HEADERS([pwd.h])
+AC_CHECK_HEADERS([sys/sysctl.h])
+AC_CHECK_HEADERS([sys/proc_info.h])
+AC_CHECK_HEADERS([libproc.h])
 AC_CHECK_FUNCS([kill])
 AC_COMPILE_IFELSE(
    [AC_LANG_PROGRAM(
