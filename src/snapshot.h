@@ -1,10 +1,8 @@
 #ifndef PS_SNAPSHOT_H
 #define PS_SNAPSHOT_H
 
+#include "config.h"
 #include "common.h"
-#if defined( __APPLE__ ) && defined( TARGET_OS_MAC ) && defined(PS_COCOA)
-#   include "cocoa.h"
-#endif
 #include "process.h"
 #include "cocoa.h"
 #include "icon.h"
@@ -80,7 +78,7 @@ CONTAINER get_entries_from_window_manager()
         if ( pidArray[i] == INVALID_PID )
             continue;
 
-        processes.emplace_back( pidArray[i] );
+        processes.push_back( pidArray[i] );
     }
 
 exit:
@@ -107,11 +105,11 @@ exit:
 
         const pid_t pid = wnck_window_get_pid( window );
         assert( pid != ps::INVALID_PID );
-        processes.emplace_back(
+        processes.push_back( pid (
             pid,
             get_cmdline_from_pid( pid ),
             wnck_window_get_name( window )
-            );
+            ) );
     }
 
 #elif defined(WIN32)
@@ -225,7 +223,7 @@ CONTAINER get_entries_from_procfs()
     {
         process<T> next_process;
         if ( read_entry_from_procfs( pos, next_process ) )
-            all_processes.push_back( std::move( next_process ) );
+            all_processes.push_back( PS_MOVE( next_process ) );
     }
 
     return all_processes;
@@ -242,19 +240,19 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
         if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
         { 
             const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), bsd_processes.cbegin(), bsd_processes.cend() );
+            all_processes.insert( all_processes.end(), bsd_processes.begin(), bsd_processes.end() );
 
             if ( target_os() == OS_LINUX )
             {
                 const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
-                all_processes.insert( all_processes.end(), procfs_entries.cbegin(), procfs_entries.cend() );
+                all_processes.insert( all_processes.end(), procfs_entries.begin(), procfs_entries.end() );
             }
         }
 
         if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
         {
             const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), gui_applications.cbegin(), gui_applications.cend() );
+            all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
         }
     }
 
@@ -263,13 +261,13 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
         if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
         {
             const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), gui_applications.cbegin(), gui_applications.cend() );
+            all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
         }
 
         if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
         {
 		    const CONTAINER regular_processes = get_entries_from_syscall< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), regular_processes.cbegin(), regular_processes.cend() );
+            all_processes.insert( all_processes.end(), regular_processes.begin(), regular_processes.end() );
         }
     }
 	

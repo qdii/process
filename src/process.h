@@ -4,11 +4,10 @@
 // VERSION 1.0
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
+#include "config.h"
 #include "common.h"
 #include "icon.h"
-#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
-#   include "cocoa.h"
-#endif
+#include "cocoa.h"
 
 namespace ps
 {
@@ -69,7 +68,7 @@ std::string get_cmdline_from_pid( const pid_t pid )
     if ( process_handle == NULL )
         return "";
 
-    std::unique_ptr<char[]> buffer( new char[MAX_PATH] );
+    unique_ptr<char[]> buffer( new char[MAX_PATH] );
 
     const DWORD length 
         = GetProcessImageFileNameA(
@@ -125,14 +124,18 @@ struct process
     /**@brief Constructs a copy of a process */
     process( const process & );
 
+#if HAVE_STD__MOVE
     /**@brief Move-constructs a process */
     process( process && );
+#endif
 
     /**@brief Assigns a copy of a process */
     process & operator=( const process & );
 
+#if HAVE_STD__MOVE
     /**@brief Move-assigns a copy of a process */
     process & operator=( process && );
+#endif
 
     /**@brief This is the name that makes most sense to a human
      *        It could be the title bar, or the product name as
@@ -209,6 +212,7 @@ process<T> & process<T>::operator=( const process & other )
     return *this;
 }
 
+#if HAVE_STD__MOVE
 template< typename T >
 process<T> & process<T>::operator=( process && other )
 {
@@ -221,6 +225,7 @@ process<T> & process<T>::operator=( process && other )
 
     return *this;
 }
+#endif
 
 template< typename T >
 process<T>::process( const process & copy )
@@ -233,6 +238,8 @@ process<T>::process( const process & copy )
 {
 }
 
+
+#if HAVE_STD__MOVE
 template< typename T >
 process<T>::process( process && copy )
     : m_pid(        std::move( copy.m_pid ) )
@@ -243,6 +250,7 @@ process<T>::process( process && copy )
     , m_icon(       std::move( copy.m_icon ) )
 {
 }
+#endif
 
 template< typename T >
 process<T>::process( const pid_t pid )
@@ -263,7 +271,7 @@ process<T>::process( const pid_t pid )
     if ( !size )
         return;
 
-    std::unique_ptr< unsigned char[] > data( new unsigned char[size] );
+    unique_ptr< unsigned char[] > data( new unsigned char[size] );
     if (!GetFileVersionInfo( m_cmdline.c_str(), 0, size, data.get() ))
         return;
 
@@ -291,11 +299,11 @@ process<T>::process( const pid_t pid )
 
 #elif defined(__APPLE__) && defined(TARGET_OS_MAC)
 
-    std::unique_ptr< char, void (*)(void*) > title_ptr   ( nullptr, &std::free );
-    std::unique_ptr< char, void (*)(void*) > name_ptr    ( nullptr, &std::free );
-    std::unique_ptr< char, void (*)(void*) > version_ptr ( nullptr, &std::free );
-    std::unique_ptr< char, void (*)(void*) > icon_ptr    ( nullptr, &std::free );
-    std::unique_ptr< char, void (*)(void*) > path_ptr    ( nullptr, &std::free );
+    unique_ptr< char, void (*)(void*) > title_ptr   ( nullptr, &std::free );
+    unique_ptr< char, void (*)(void*) > name_ptr    ( nullptr, &std::free );
+    unique_ptr< char, void (*)(void*) > version_ptr ( nullptr, &std::free );
+    unique_ptr< char, void (*)(void*) > icon_ptr    ( nullptr, &std::free );
+    unique_ptr< char, void (*)(void*) > path_ptr    ( nullptr, &std::free );
 
     char * title,
          * name,
@@ -329,13 +337,13 @@ process<T>::process( const pid_t pid )
 
     if ( !bundle_path.empty() && !icon_name.empty() )
         m_icon.assign( 
-            get_icon_path_from_icon_name( std::move( bundle_path ), 
-                                          std::move( icon_name ) ) ); 
+            get_icon_path_from_icon_name( bundle_path, 
+                                          icon_name ) ); 
 
     m_pid = pid;
-    m_name.assign( std::move( name_str ) );
-    m_title.assign( std::move( title_str ) );
-    m_version.assign( std::move( version_str ) );
+    m_name.swap( name_str );
+    m_title.swap( title_str );
+    m_version.swap( version_str );
 #endif
 }
 
@@ -411,7 +419,7 @@ int process<T>::kill( const bool softly ) const
 {
     using namespace ps::details;
     assert( valid() );
-#if defined __linux || defined __APPLE__
+#if HAVE_KILL
     const int killed = ::kill( m_pid, softly ? SIGTERM : SIGKILL );
 
     if ( killed == EPERM )
@@ -421,7 +429,7 @@ int process<T>::kill( const bool softly ) const
         return -2;
 
     assert( killed == 0 );
-#elif defined _WIN32
+#elif HAVE_WINBASE_H || HAVE_PROCESSTHREADSAPI_H 
     (void)softly;
     const auto handle = create_handle_from_pid( m_pid, PROCESS_TERMINATE );
     if ( handle == NULL )

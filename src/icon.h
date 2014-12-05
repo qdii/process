@@ -46,7 +46,7 @@ private:
 
 struct cannot_lock_hglobal : std::exception
 {
-    const char * what() const override
+    const char * what() const PS_NOEXCEPT override
     {
         return "Cannot lock HGLOBAL";
     }
@@ -262,7 +262,7 @@ std::vector<unsigned char> get_icon_from_file( const std::string & path )
     if ( path.empty() )
         return std::vector< unsigned char >();
 
-    std::ifstream icon_file( path, std::ios_base::binary );
+    std::ifstream icon_file( path.c_str(), std::ios_base::binary );
     if ( !icon_file )
         return std::vector< unsigned char >();
 

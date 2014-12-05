@@ -24,20 +24,42 @@ AM_CONDITIONAL([GNOME],[test "x$gnome" = "xtrue"])
 AC_PROG_CXX
 AC_PROG_OBJC
 AC_PROG_OBJCXX
+
+# Check for libraries and headers
 AC_LANG_PUSH([Objective C])
 AC_CHECK_HEADERS([Foundation/Foundation.h])
 AC_CHECK_HEADERS([AppKit/NSRunningApplication.h])
 AC_CHECK_HEADERS([AppKit/NSWorkspace.h])
-AX_APPEND_LINK_FLAGS([-framework AppKit
-                      -framework Foundation])
+AX_APPEND_LINK_FLAGS(["-framework AppKit"])
+AX_APPEND_LINK_FLAGS(["-framework Foundation"])
 AC_LANG_POP
 
+AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([windows.h])
 AC_CHECK_HEADERS([gdiplus.h])
 AC_CHECK_HEADERS([shellapi.h])
 AC_CHECK_HEADERS([winbase.h])
 AC_CHECK_HEADERS([ole2.h])
 AC_CHECK_HEADERS([codecvt])
+AC_CHECK_HEADERS([sys/types.h])
+AC_CHECK_HEADERS([assert.h])
+
+AC_CHECK_HEADERS([signal.h])
+AC_CHECK_HEADERS([iomanip])
+AC_CHECK_HEADERS([iterator])
+AC_CHECK_HEADERS([sstream])
+AC_CHECK_HEADERS([utility])
+AC_CHECK_HEADERS([string])
+AC_CHECK_HEADERS([fstream])
+AC_CHECK_HEADERS([vector])
+AC_CHECK_HEADERS([memory])
+AC_CHECK_FUNCS([kill])
+AC_CHECK_FUNCS([std::move])
+
+AC_CHECK_TYPES([pid_t])
+AC_CHECK_TYPES([unique_ptr],[],[],[[#include <memory>
+                                    typedef std::unique_ptr<int> unique_ptr;]])
+AC_LANG_POP
 
 if test "x$gnome" = "xtrue"; then
     CPPFLAGS="$CPPFLAGS -DPS_GNOME"

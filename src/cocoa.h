@@ -1,8 +1,6 @@
 #ifndef PS_COCOA_H
 #define PS_COCOA_H
 
-#include <sys/types.h>
-
 // the caller is responsible for freeing the memory of every string
 int get_desktop_applications( pid_t * pidArray, 
                               char ** bundleIdentifierArray,

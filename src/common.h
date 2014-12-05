@@ -1,22 +1,60 @@
 #ifndef PS_COMMON_H
 #define PS_COMMON_H
 
-#include <string>
-#include <assert.h>
-#include <boost/filesystem.hpp>
-#include <vector>
-#include <fstream>
+#include "config.h"
+
+#if HAVE_BOOST
+#if HAVE_BOOST_FILESYSTEM_PATH_HPP
+#   include <boost/filesystem.hpp>
+#endif
 #include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/current_function.hpp>
 #include <boost/config.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/algorithm/string.hpp>
-#include <utility>
-#include <sstream>
-#include <iterator>
-#include <assert.h>
-#include <iomanip>
+#endif
+
+#if HAVE_VECTOR
+#   include <vector>
+#endif
+
+#if HAVE_MEMORY
+#   include <memory>
+#endif
+
+#if HAVE_STRING
+#   include <string>
+#endif
+
+#if HAVE_FSTREAM
+#   include <fstream>
+#endif
+
+#if HAVE_UTILITY
+#   include <utility>
+#endif
+
+#if HAVE_SSTREAM
+#   include <sstream>
+#endif
+
+#if HAVE_ITERATOR
+#   include <iterator>
+#endif
+
+#if HAVE_IOMANIP
+#   include <iomanip>
+#endif
+
+#if HAVE_ASSERT_H
+#   include <assert.h>
+#else
+#   define assert(X) (void(0))
+#endif
+
+#if HAVE_SYS_TYPES_H
+#   include <sys/types.h>
+#endif
 
 #ifdef __APPLE__
 #   include <TargetConditionals.h>
@@ -65,12 +103,20 @@
 #   include <ole2.h>
 #endif
 
+#if HAVE_PROCESSTHREADSAPI_H
+#   include <processthreadsapi.h>
+#endif
+
 #if HAVE_CODECVT
 #   include <codecvt>
 #endif
 
-#if defined( WIN32 ) || defined( WIN64 )
-typedef DWORD pid_t;
+#if !defined(HAVE_PID_T) || (HAVE_PID_T != 1)
+#   if HAVE_DWORD
+    typedef DWORD pid_t;
+#   else
+    typedef unsigned pid_t;
+#   endif
 #endif
 
 #ifdef _WIN32
@@ -79,8 +125,24 @@ typedef DWORD pid_t;
 #   define PS_NOEXCEPT noexcept
 #endif
 
+#if HAVE_STD__MOVE
+#   define PS_MOVE(X) (::std::move(X))
+#else
+#   define PS_MOVE(X) (X)
+#endif
+
+
 namespace ps
 {
+
+#if HAVE_UNIQUE_PTR
+template<typename T, typename U = std::default_delete<T>>
+using unique_ptr = ::std::unique_ptr<T,U>;
+#elif HAVE_BOOST
+template<typename T, typename U>
+using unique_ptr = ::boost::shared_ptr<T>;
+#endif
+
 struct cannot_find_icon : std::exception
 {
     cannot_find_icon( const char * file_name )
