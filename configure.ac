@@ -28,7 +28,16 @@ AC_LANG_PUSH([Objective C])
 AC_CHECK_HEADERS([Foundation/Foundation.h])
 AC_CHECK_HEADERS([AppKit/NSRunningApplication.h])
 AC_CHECK_HEADERS([AppKit/NSWorkspace.h])
+AX_APPEND_LINK_FLAGS([-framework AppKit
+                      -framework Foundation])
 AC_LANG_POP
+
+AC_CHECK_HEADERS([windows.h])
+AC_CHECK_HEADERS([gdiplus.h])
+AC_CHECK_HEADERS([shellapi.h])
+AC_CHECK_HEADERS([winbase.h])
+AC_CHECK_HEADERS([ole2.h])
+AC_CHECK_HEADERS([codecvt])
 
 if test "x$gnome" = "xtrue"; then
     CPPFLAGS="$CPPFLAGS -DPS_GNOME"

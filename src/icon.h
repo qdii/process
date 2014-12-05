@@ -8,7 +8,7 @@ namespace ps
 namespace details
 {
 
-#ifdef _WIN32
+#if HAVE_OLE2_H
 struct input_stream
 {
     input_stream()
@@ -42,6 +42,7 @@ struct input_stream
 private:
     IStream * m_istream;
 };
+#endif
 
 struct cannot_lock_hglobal : std::exception
 {
@@ -51,6 +52,7 @@ struct cannot_lock_hglobal : std::exception
     }
 };
 
+#if HAVE_WINBASE_H
 struct hglobal_lock
 {
     hglobal_lock( HGLOBAL hglobal )
@@ -86,7 +88,9 @@ private:
     HGLOBAL     m_hglobal;
     bool        m_is_locked;
 };
+#endif
 
+#if HAVE_SHELLAPI_H
 struct hicon
 {
     explicit
@@ -112,6 +116,9 @@ struct hicon
 private:
     SHFILEINFO m_file_info;
 };
+#endif
+
+#if HAVE_GDIPLUS_H
 struct gdiplus_context
 {
     gdiplus_context()
@@ -215,7 +222,7 @@ get_bitmap_from_hicon( HICON hIcon, const Gdiplus::PixelFormat pixel_format )
 
     return result;
 }
-#endif // _WIN32
+#endif // HAVE_GDIPLUS_H
 
 std::vector<unsigned char> get_icon_from_file( const std::string & path )
 {

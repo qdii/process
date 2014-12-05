@@ -45,11 +45,31 @@
 #	define PS_CONSTEXPR constexpr
 #endif
 
-#if defined( WIN32 ) || defined( WIN64 )
-#	include <windows.h>
+#if HAVE_WINDOWS_H
+#   include <windows.h>
+#endif
+
+#if HAVE_GDIPLUS_H
 #   include <gdiplus.h>
-#   include <psapi.h>
+#endif
+
+#if HAVE_SHELLAPI_H
+#   include <shellapi.h>
+#endif
+
+#if HAVE_WINBASE_H
+#   include <winbase.h>
+#endif
+
+#if HAVE_OLE2_H
+#   include <ole2.h>
+#endif
+
+#if HAVE_CODECVT
 #   include <codecvt>
+#endif
+
+#if defined( WIN32 ) || defined( WIN64 )
 typedef DWORD pid_t;
 #endif
 
