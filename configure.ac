@@ -10,16 +10,6 @@ AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 DX_INIT_DOXYGEN([process])
 
-AC_ARG_ENABLE( [gnome],
-               [AS_HELP_STRING([--enable-gnome],[enable listing Gnome applications])],
-               [case "${enableval}" in
-                    yes) gnome=true ;;
-                    no)  gnome=false ;;
-                    *)   AC_MSG_ERROR([bad value ${enableval} for --enable-gnome]) ;;
-                esac],[gnome=false]
-             )
-AM_CONDITIONAL([GNOME],[test "x$gnome" = "xtrue"])
-
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_OBJC
@@ -41,10 +31,10 @@ AC_CHECK_HEADERS([gdiplus.h])
 AC_CHECK_HEADERS([shellapi.h])
 AC_CHECK_HEADERS([winbase.h])
 AC_CHECK_HEADERS([ole2.h])
+AC_CHECK_HEADERS([winuser.h])
 AC_CHECK_HEADERS([codecvt])
 AC_CHECK_HEADERS([sys/types.h])
 AC_CHECK_HEADERS([assert.h])
-
 AC_CHECK_HEADERS([signal.h])
 AC_CHECK_HEADERS([iomanip])
 AC_CHECK_HEADERS([iterator])
@@ -58,6 +48,7 @@ AC_CHECK_HEADERS([pwd.h])
 AC_CHECK_HEADERS([sys/sysctl.h])
 AC_CHECK_HEADERS([sys/proc_info.h])
 AC_CHECK_HEADERS([libproc.h])
+AC_CHECK_HEADERS([gdk-pixbuf/gdk-pixbuf.h])
 AC_CHECK_FUNCS([kill])
 AC_COMPILE_IFELSE(
    [AC_LANG_PROGRAM(
@@ -70,12 +61,9 @@ AC_COMPILE_IFELSE(
 AC_CHECK_TYPES([pid_t])
 AC_CHECK_TYPES([unique_ptr],[],[],[[#include <memory>
                                     typedef std::unique_ptr<int> unique_ptr;]])
+PKG_CHECK_MODULES([WNCK],[libwnck-3.0],[],[AC_MSG_WARN([Could not detect libwnck, which is necessary to enumerate windows on linux])])
+AC_CHECK_HEADERS([libwnck.h])
 AC_LANG_POP
-
-if test "x$gnome" = "xtrue"; then
-    CPPFLAGS="$CPPFLAGS -DPS_GNOME"
-    PKG_CHECK_MODULES([WNCK],[libwnck-3.0])
-fi
 
 # Checks for libraries.
 BOOST_REQUIRE([1.51])

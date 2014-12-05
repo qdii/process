@@ -57,35 +57,8 @@ template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_window_manager()
 {
     CONTAINER processes;
-#if defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(PS_COCOA)
-    const int nbApplications =
-        get_desktop_applications( nullptr, nullptr, nullptr, 0 );
+#if HAVE_LIBWNCK_H
 
-    std::vector< pid_t > pidArray( nbApplications );
-    std::vector< char* > bundleIdentifierArray( nbApplications );
-    std::vector< char* > bundleNameArray( nbApplications );
-    int success = get_desktop_applications( 
-            const_cast<pid_t*>( pidArray.data() ),
-            const_cast<char **>( bundleIdentifierArray.data() ),
-            const_cast<char **>( bundleNameArray.data() ),
-            nbApplications
-            );
-    if ( success < 0 )
-        goto exit;
-
-    for ( int i=0; i<success; ++i )
-    {
-        if ( pidArray[i] == INVALID_PID )
-            continue;
-
-        processes.push_back( pidArray[i] );
-    }
-
-exit:
-    std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(), &free );
-    std::for_each( bundleNameArray.begin(), bundleNameArray.end(), &free );
-
-#elif defined __linux && defined( PS_GNOME )
     if (!gdk_init_check(NULL, NULL))
         return CONTAINER();
 
@@ -111,15 +84,43 @@ exit:
             wnck_window_get_name( window )
             ) );
     }
+#elif HAVE_WINUSER_H
 
-#elif defined(WIN32)
     std::vector< pid_t > pids;
     if ( !EnumWindows( &find_pid_from_window<T>, reinterpret_cast<LPARAM>(&pids) ) )
         return CONTAINER();
 
     for ( const pid_t pid : pids )
         processes.emplace_back( pid );
-    
+
+#else
+    const int nbApplications =
+        get_desktop_applications( nullptr, nullptr, nullptr, 0 );
+
+    std::vector< pid_t > pidArray( nbApplications );
+    std::vector< char* > bundleIdentifierArray( nbApplications );
+    std::vector< char* > bundleNameArray( nbApplications );
+    const int success = get_desktop_applications( 
+            const_cast<pid_t*>( pidArray.data() ),
+            const_cast<char **>( bundleIdentifierArray.data() ),
+            const_cast<char **>( bundleNameArray.data() ),
+            nbApplications
+            );
+    if ( success < 0 )
+        goto exit;
+
+    for ( int i=0; i<success; ++i )
+    {
+        if ( pidArray[i] == INVALID_PID )
+            continue;
+
+        processes.emplace_back( pidArray[i] );
+    }
+
+exit:
+    std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(), &free );
+    std::for_each( bundleNameArray.begin(), bundleNameArray.end(), &free );
+
 #endif
     return processes;
 }

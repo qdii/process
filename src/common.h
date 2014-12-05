@@ -76,9 +76,12 @@
 #   include <sys/proc_info.h>
 #endif
 
-#ifdef PS_GNOME
+#if HAVE_LIBWNCK_H
 #   define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #   include <libwnck/libwnck.h>
+#endif
+
+#if HAVE_GDK_PIXBUF_GDK_PIXBUF_H
 #   include <gdk-pixbuf/gdk-pixbuf.h>
 #endif
 
@@ -106,6 +109,10 @@
 
 #if HAVE_OLE2_H
 #   include <ole2.h>
+#endif
+
+#if HAVE_WINVER_H
+#   include <winver.h>
 #endif
 
 #if HAVE_PROCESSTHREADSAPI_H

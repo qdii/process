@@ -13,7 +13,7 @@ namespace ps
 {
 namespace details
 {
-#   if defined(WIN32)
+#   if HAVE_WINVER_H
     static inline
     std::string get_specific_file_info(
         unsigned char * const data,
@@ -254,17 +254,16 @@ process<T>::process( process && copy )
 
 template< typename T >
 process<T>::process( const pid_t pid )
-    : m_pid( INVALID_PID )
-    , m_cmdline( "" )
+    : m_pid( pid )
+    , m_cmdline( get_cmdline_from_pid( pid ) )
     , m_title( "" )
     , m_name( "" )
     , m_version( "" )
     , m_icon( "" )
 {
     using namespace ps::details;
-#ifdef _WIN32
-    std::string cmdline = get_cmdline_from_pid( pid );
-    if ( cmdline.empty() )
+#if HAVE_WINVER_H
+    if ( m_cmdline.empty() )
         return;
 
     unsigned size = GetFileVersionInfoSize( m_cmdline.c_str(), 0 );
@@ -291,23 +290,11 @@ process<T>::process( const pid_t pid )
     std::string title     = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName"    );
     std::string version   = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
 
-    m_pid = pid;
-    m_cmdline.swap( cmdline );
     m_name.swap( name );
     m_title.swap( title ); 
     m_version.swap( version );
 
 #elif defined(__APPLE__) && defined(TARGET_OS_MAC)
-
-    m_pid     = pid;
-    m_cmdline = get_cmdline_from_pid( pid );
-
-    unique_ptr< char, void (*)(void*) > title_ptr   ( nullptr, &std::free );
-    unique_ptr< char, void (*)(void*) > name_ptr    ( nullptr, &std::free );
-    unique_ptr< char, void (*)(void*) > version_ptr ( nullptr, &std::free );
-    unique_ptr< char, void (*)(void*) > icon_ptr    ( nullptr, &std::free );
-    unique_ptr< char, void (*)(void*) > path_ptr    ( nullptr, &std::free );
-
     char * title,
          * name,
          * version,
@@ -326,26 +313,23 @@ process<T>::process( const pid_t pid )
     assert( icon    != nullptr );
 
     // RAII structures to make sure the memory is free when going out of scope
-    title_ptr  .reset( title );
-    name_ptr   .reset( name );
-    version_ptr.reset( version );
-    icon_ptr   .reset( icon );
-    path_ptr   .reset( path );
+    unique_ptr< char, void (*)(void*) > title_ptr  ( title, &std::free );
+    unique_ptr< char, void (*)(void*) > name_ptr   ( name, &std::free );
+    unique_ptr< char, void (*)(void*) > version_ptr( version, &std::free );
+    unique_ptr< char, void (*)(void*) > icon_ptr   ( icon, &std::free );
+    unique_ptr< char, void (*)(void*) > path_ptr   ( path, &std::free );
 
-    std::string name_str    ( name ),
-                title_str   ( title ),
-                version_str ( version ),
-                bundle_path ( path ),
+    m_name.assign( name );
+    m_title.assign( title );
+    m_version.assign( version);
+
+    std::string bundle_path ( path ),
                 icon_name   ( icon );
 
     if ( !bundle_path.empty() && !icon_name.empty() )
         m_icon.assign( 
             get_icon_path_from_icon_name( bundle_path, 
                                           icon_name ) ); 
-
-    m_name.swap( name_str );
-    m_title.swap( title_str );
-    m_version.swap( version_str );
 #endif
 }
 
