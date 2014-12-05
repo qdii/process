@@ -6,19 +6,15 @@ libprocess_la_SOURCES = \
 	common.h \
 	process.h \
 	snapshot.h \
-	icon.h
+	icon.h \
+	cocoa.h \
+	cocoa.mm
 
 libprocess_la_LDFLAGS = \
 	-framework AppKit \
 	-framework Foundation
 
 libprocess_la_CPPFLAGS =
-
-if COCOA
-libprocess_la_SOURCES += \
-	cocoa.mm \
-	cocoa.h
-endif
 
 if GNOME
 libprocess_la_CPPFLAGS += \

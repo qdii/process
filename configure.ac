@@ -10,16 +10,6 @@ AM_INIT_AUTOMAKE([foreign])
 LT_INIT
 DX_INIT_DOXYGEN([process])
 
-AC_ARG_ENABLE( [cocoa], 
-               [AS_HELP_STRING([--enable-cocoa],[enable listing Cocoa application])],
-               [case "${enableval}" in
-                    yes) cocoa=true ;;
-                    no)  cocoa=false ;;
-                    *)   AC_MSG_ERROR([bad value ${enableval} for --enable-cocoa]) ;;
-                esac],[cocoa=false]
-             )
-AM_CONDITIONAL([COCOA],[test "x$cocoa" = "xtrue"])
-
 AC_ARG_ENABLE( [gnome],
                [AS_HELP_STRING([--enable-gnome],[enable listing Gnome applications])],
                [case "${enableval}" in
@@ -35,9 +25,9 @@ AC_PROG_CXX
 AC_PROG_OBJC
 AC_PROG_OBJCXX
 
-if test "x$cocoa" = "xtrue"; then
-    CPPFLAGS="$CPPFLAGS -DPS_COCOA"
-fi
+AC_CHECK_HEADERS([Foundation/Foundation.h])
+AC_CHECK_HEADERS([AppKit/NSRunningApplication.h])
+AC_CHECK_HEADERS([AppKit/NSWorkspace.h])
 
 if test "x$gnome" = "xtrue"; then
     CPPFLAGS="$CPPFLAGS -DPS_GNOME"

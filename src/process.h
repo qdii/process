@@ -199,12 +199,12 @@ process<T>::process( pid_t pid,
 template< typename T >
 process<T> & process<T>::operator=( const process & other )
 {
-    m_pid = other.m_pid;
+    m_pid     = other.m_pid;
     m_cmdline = other.m_cmdline;
-    m_title = other.m_title;
-    m_name = other.m_name;
+    m_title   = other.m_title;
+    m_name    = other.m_name;
     m_version = other.m_version;
-    m_icon = other.m_icon;
+    m_icon    = other.m_icon;
 
     return *this;
 }
@@ -212,42 +212,42 @@ process<T> & process<T>::operator=( const process & other )
 template< typename T >
 process<T> & process<T>::operator=( process && other )
 {
-    m_pid = std::move( other.m_pid );
+    m_pid     = std::move( other.m_pid );
     m_cmdline = std::move( other.m_cmdline );
-    m_title = std::move( other.m_title );
-    m_name = std::move( other.m_name );
+    m_title   = std::move( other.m_title );
+    m_name    = std::move( other.m_name );
     m_version = std::move( other.m_version );
-    m_icon =  std::move( other.m_icon );
+    m_icon    = std::move( other.m_icon );
 
     return *this;
 }
 
 template< typename T >
 process<T>::process( const process & copy )
-    : m_pid( copy.m_pid )
+    : m_pid(     copy.m_pid     )
     , m_cmdline( copy.m_cmdline )
-    , m_title( copy.m_title )
-    , m_name( copy.m_name )
+    , m_title(   copy.m_title   )
+    , m_name(    copy.m_name    )
     , m_version( copy.m_version )
-    , m_icon( copy.m_icon )
+    , m_icon(    copy.m_icon    )
 {
 }
 
 template< typename T >
 process<T>::process( process && copy )
-    : m_pid( std::move( copy.m_pid ) )
-    , m_cmdline( std::move( copy.m_cmdline ) )
-    , m_title( std::move( copy.m_title ) )
-    , m_name( std::move( copy.m_name ) )
-    , m_version( std::move( copy.m_version ) )
-    , m_icon( std::move( copy.m_icon ) )
+    : m_pid(        std::move( copy.m_pid ) )
+    , m_cmdline(    std::move( copy.m_cmdline ) )
+    , m_title(      std::move( copy.m_title ) )
+    , m_name(       std::move( copy.m_name ) )
+    , m_version(    std::move( copy.m_version ) )
+    , m_icon(       std::move( copy.m_icon ) )
 {
 }
 
 template< typename T >
 process<T>::process( const pid_t pid )
-    : m_pid( pid )
-    , m_cmdline( get_cmdline_from_pid( pid ) )
+    : m_pid( INVALID_PID )
+    , m_cmdline( "" )
     , m_title( "" )
     , m_name( "" )
     , m_version( "" )
@@ -255,7 +255,8 @@ process<T>::process( const pid_t pid )
 {
     using namespace ps::details;
 #ifdef _WIN32
-    if ( m_cmdline.empty() )
+    std::string cmdline = get_cmdline_from_pid( pid );
+    if ( cmdline.empty() )
         return;
 
     unsigned size = GetFileVersionInfoSize( m_cmdline.c_str(), 0 );
@@ -278,11 +279,23 @@ process<T>::process( const pid_t pid )
                         &size) )
         return;
 
-    m_name      = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "InternalName"   );
-    m_title     = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName"    ); 
-    m_version   = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
+    std::string name      = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "InternalName"   );
+    std::string title     = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName"    );
+    std::string version   = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
+
+    m_pid = pid;
+    m_cmdline.swap( cmdline );
+    m_name.swap( name );
+    m_title.swap( title ); 
+    m_version.swap( version );
 
 #elif defined(__APPLE__) && defined(TARGET_OS_MAC)
+
+    std::unique_ptr< char, void (*)(void*) > title_ptr   ( nullptr, &std::free );
+    std::unique_ptr< char, void (*)(void*) > name_ptr    ( nullptr, &std::free );
+    std::unique_ptr< char, void (*)(void*) > version_ptr ( nullptr, &std::free );
+    std::unique_ptr< char, void (*)(void*) > icon_ptr    ( nullptr, &std::free );
+    std::unique_ptr< char, void (*)(void*) > path_ptr    ( nullptr, &std::free );
 
     char * title,
          * name,
@@ -302,23 +315,27 @@ process<T>::process( const pid_t pid )
     assert( icon    != nullptr );
 
     // RAII structures to make sure the memory is free when going out of scope
-    std::unique_ptr< char, void (*)(void*) > title_ptr  ( title,   &std::free );
-    std::unique_ptr< char, void (*)(void*) > name_ptr   ( name,    &std::free );
-    std::unique_ptr< char, void (*)(void*) > version_ptr( version, &std::free );
-    std::unique_ptr< char, void (*)(void*) > icon_ptr   ( icon,    &std::free );
-    std::unique_ptr< char, void (*)(void*) > path_ptr   ( path,    &std::free );
+    title_ptr  .reset( title );
+    name_ptr   .reset( name );
+    version_ptr.reset( version );
+    icon_ptr   .reset( icon );
+    path_ptr   .reset( path );
 
-    m_name.assign( name );
-    m_title.assign( title );
-    m_version.assign( version ); 
-
-    std::string bundle_path( path );
-    std::string icon_name( icon );
+    std::string name_str    ( name ),
+                title_str   ( title ),
+                version_str ( version ),
+                bundle_path ( path ),
+                icon_name   ( icon );
 
     if ( !bundle_path.empty() && !icon_name.empty() )
         m_icon.assign( 
             get_icon_path_from_icon_name( std::move( bundle_path ), 
                                           std::move( icon_name ) ) ); 
+
+    m_pid = pid;
+    m_name.assign( std::move( name_str ) );
+    m_title.assign( std::move( title_str ) );
+    m_version.assign( std::move( version_str ) );
 #endif
 }
 
