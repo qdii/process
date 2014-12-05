@@ -6,12 +6,12 @@
 #endif
 #include "cocoa.h"
 
+#if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
 int get_desktop_applications( pid_t * pidArray, 
                               char ** bundleIdentifierArray,
                               char ** bundleNameArray,
                               int length )
 {
-#if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
     NSAutoreleasePool *p = [NSAutoreleasePool new];
 
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
@@ -45,18 +45,16 @@ int get_desktop_applications( pid_t * pidArray,
     }
     [ p release ];
     return max;
-#else
-    return -1;
-#endif
 }
+#endif
 
+#if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
 int get_info_from_pid( pid_t pid, char ** title,
                        char ** name,
                        char ** version,
                        char ** icon,
                        char ** path )
 {
-#if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
     NSAutoreleasePool *p = [NSAutoreleasePool new];
 
     ProcessSerialNumber psn = { kNoProcess, kNoProcess };
@@ -127,8 +125,6 @@ int get_info_from_pid( pid_t pid, char ** title,
  
     [ p release ];
     return 0;
-#else
-    return -6;
-#endif
 }
+#endif
 

@@ -76,7 +76,7 @@
 #   include <sys/proc_info.h>
 #endif
 
-#if HAVE_LIBWNCK_H
+#if HAVE_LIBWNCK
 #   define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #   include <libwnck/libwnck.h>
 #endif

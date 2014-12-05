@@ -57,7 +57,7 @@ template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_window_manager()
 {
     CONTAINER processes;
-#if HAVE_LIBWNCK_H
+#if HAVE_LIBWNCK
 
     if (!gdk_init_check(NULL, NULL))
         return CONTAINER();
@@ -78,11 +78,11 @@ CONTAINER get_entries_from_window_manager()
 
         const pid_t pid = wnck_window_get_pid( window );
         assert( pid != ps::INVALID_PID );
-        processes.push_back( pid (
+        processes.emplace_back(
             pid,
             get_cmdline_from_pid( pid ),
             wnck_window_get_name( window )
-            ) );
+            );
     }
 #elif HAVE_WINUSER_H
 

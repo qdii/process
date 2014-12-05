@@ -1,6 +1,9 @@
 #ifndef PS_COCOA_H
 #define PS_COCOA_H
 
+#include "config.h"
+
+#if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
 // the caller is responsible for freeing the memory of every string
 int get_desktop_applications( pid_t * pidArray, 
                               char ** bundleIdentifierArray,
@@ -14,5 +17,6 @@ int get_info_from_pid( pid_t pid,
                        char ** version,
                        char ** icon,
                        char ** path );
+#endif
 
 #endif // PS_COCOA_H
