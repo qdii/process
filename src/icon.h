@@ -147,7 +147,7 @@ CLSID get_encoder_from_mime_type( const std::string & mime )
 
     for( unsigned j = 0; j < num; ++j )
     {
-        if( to_utf8( std::wstring( encoders[j].MimeType ) ) == mime )
+        if( ps::details::to_utf8( std::wstring( encoders[j].MimeType ) ) == mime )
             return encoders[j].Clsid;
     }
 
@@ -323,6 +323,8 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
 
         break;
     }
+#else
+    (void)pid;
 #endif
     return contents;
 }

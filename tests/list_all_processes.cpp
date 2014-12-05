@@ -128,6 +128,29 @@ bool test_soft_kill()
     myself->kill( true );
     sleep(1);
     return signaled;
+#elif defined _WIN32
+    ShellExecute(NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL);
+    Sleep(1);
+    ps::snapshot<int> all_processes;
+    auto notepad = std::find_if(
+        all_processes.cbegin(),
+        all_processes.cend(),
+        []( const ps::process<int> &t ) { return t.name() == "Notepad"; }
+    );
+
+    if ( notepad == all_processes.cend() )
+        return false;
+
+    notepad->kill( true );
+    Sleep(1);
+    ps::snapshot<int> all_processes_after;
+    if (std::find_if(
+        all_processes_after.cbegin(),
+        all_processes_after.cend(),
+        []( const ps::process<int> &t ) { return t.name() == "Notepad"; }
+    ) == all_processes_after.cend())
+        return true;
+
 #endif
     return false;
 }
@@ -148,6 +171,9 @@ bool test_hard_kill()
         return false;
 
     if ( child_process.kill( true ) == 0 )
+        return true;
+#else if defined(_WIN32)
+    if ( test_soft_kill() )
         return true;
 #endif
     return false;

@@ -160,16 +160,16 @@ private:
 };
 
 inline
-handle create_handle_from_pid( const pid_t pid )
+handle create_handle_from_pid( const pid_t pid, const DWORD other_privileges = 0)
 {
     HANDLE h =
         OpenProcess( PROCESS_QUERY_INFORMATION |
-                       PROCESS_VM_READ,
+                       PROCESS_VM_READ | other_privileges,
                        FALSE, pid );
 
     if ( h == NULL )
         h = OpenProcess( PROCESS_QUERY_LIMITED_INFORMATION |
-                         PROCESS_VM_READ,
+                         PROCESS_VM_READ | other_privileges,
                          FALSE, pid );
 
     return h;
@@ -207,6 +207,15 @@ std::string get_kernel_drive( const std::string & msdos_drive )
     const auto length = QueryDosDeviceA( msdos_drive.c_str(), buffer.get(), MAX_PATH );
     return length ? std::string( buffer.get() ) : "";
 }
+
+#ifdef _WIN32
+inline
+std::string to_utf8( const std::wstring & text )
+{
+    std::wstring_convert< std::codecvt_utf8_utf16< wchar_t >, wchar_t > convert;
+    return convert.to_bytes( text );
+}
+#endif
 
 // replace the kernel drive part of the path with a msdos one
 // like: \Device\HarddiskVolume2\boot.ini -> C:\boot.ini

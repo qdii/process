@@ -15,13 +15,6 @@ namespace ps
 namespace details
 {
 #   if defined(WIN32)
-    inline 
-    std::string to_utf8( const std::wstring & text )
-    {
-        std::wstring_convert< std::codecvt_utf8_utf16< wchar_t >, wchar_t > convert;
-        return convert.to_bytes( text );
-    }
-
     static inline
     std::string get_specific_file_info(
         unsigned char * const data,
@@ -130,16 +123,16 @@ struct process
     ~process();
 
     /**@brief Constructs a copy of a process */
-    process( const process & ) = default;
+    process( const process & );
 
     /**@brief Move-constructs a process */
-    process( process && ) = default;
+    process( process && );
 
     /**@brief Assigns a copy of a process */
-    process & operator=( const process & ) = default;
+    process & operator=( const process & );
 
     /**@brief Move-assigns a copy of a process */
-    process & operator=( process && ) = default;
+    process & operator=( process && );
 
     /**@brief This is the name that makes most sense to a human
      *        It could be the title bar, or the product name as
@@ -200,6 +193,54 @@ process<T>::process( pid_t pid,
     , m_name( name )
     , m_version( version )
     , m_icon( "" )
+{
+}
+
+template< typename T >
+process<T> & process<T>::operator=( const process & other )
+{
+    m_pid = other.m_pid;
+    m_cmdline = other.m_cmdline;
+    m_title = other.m_title;
+    m_name = other.m_name;
+    m_version = other.m_version;
+    m_icon = other.m_icon;
+
+    return *this;
+}
+
+template< typename T >
+process<T> & process<T>::operator=( process && other )
+{
+    m_pid = std::move( other.m_pid );
+    m_cmdline = std::move( other.m_cmdline );
+    m_title = std::move( other.m_title );
+    m_name = std::move( other.m_name );
+    m_version = std::move( other.m_version );
+    m_icon =  std::move( other.m_icon );
+
+    return *this;
+}
+
+template< typename T >
+process<T>::process( const process & copy )
+    : m_pid( copy.m_pid )
+    , m_cmdline( copy.m_cmdline )
+    , m_title( copy.m_title )
+    , m_name( copy.m_name )
+    , m_version( copy.m_version )
+    , m_icon( copy.m_icon )
+{
+}
+
+template< typename T >
+process<T>::process( process && copy )
+    : m_pid( std::move( copy.m_pid ) )
+    , m_cmdline( std::move( copy.m_cmdline ) )
+    , m_title( std::move( copy.m_title ) )
+    , m_name( std::move( copy.m_name ) )
+    , m_version( std::move( copy.m_version ) )
+    , m_icon( std::move( copy.m_icon ) )
 {
 }
 
@@ -351,6 +392,7 @@ bool process<T>::valid() const
 template< typename T >
 int process<T>::kill( const bool softly ) const
 {
+    using namespace ps::details;
     assert( valid() );
 #if defined __linux || defined __APPLE__
     const int killed = ::kill( m_pid, softly ? SIGTERM : SIGKILL );
@@ -362,6 +404,15 @@ int process<T>::kill( const bool softly ) const
         return -2;
 
     assert( killed == 0 );
+#elif defined _WIN32
+    (void)softly;
+    const auto handle = create_handle_from_pid( m_pid, PROCESS_TERMINATE );
+    if ( handle == NULL )
+        return -1;
+
+    const BOOL killed = TerminateProcess( handle, 0 );
+    if ( killed != 0 )
+        return -3;
 #endif
     return 0;
 }
