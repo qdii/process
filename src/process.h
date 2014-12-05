@@ -374,17 +374,18 @@ std::string process<T>::name() const
 template< typename T >
 std::vector< unsigned char > process<T>::icon() const
 {
+    using namespace ps::details;
     assert( valid() );
-#if defined _WIN32 || defined __APPLE__
-#   ifdef _WIN32
-    const std::string & icon_file = cmdline();
-#   else
-    const std::string & icon_file = m_icon;
-#   endif
-    return ps::details::get_icon_from_file( icon_file );
-#else
-    return ps::details::get_icon_from_pid( pid() );
-#endif
+
+    std::vector< unsigned char > icon_data = get_icon_from_pid( pid() );
+
+    if ( icon_data.empty() )
+        icon_data = ps::details::get_icon_from_file( m_icon );
+
+    if ( icon_data.empty() )
+        icon_data = ps::details::get_icon_from_file( cmdline() );
+
+    return icon_data;
 }
 
 template< typename T >
