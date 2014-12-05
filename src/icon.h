@@ -226,7 +226,7 @@ get_bitmap_from_hicon( HICON hIcon, const Gdiplus::PixelFormat pixel_format )
 
 std::vector<unsigned char> get_icon_from_file( const std::string & path )
 {
-#ifdef _WIN32
+#ifdef HAVE_GDIPLUS_H
     using namespace Gdiplus;
     gdiplus_context _;
 
@@ -258,7 +258,7 @@ std::vector<unsigned char> get_icon_from_file( const std::string & path )
         // if we cannot lock memory, we are screwed
         // ... but we still exit gracefully
     }
-#elif defined __APPLE__ && defined TARGET_OS_MAC
+#else
     if ( path.empty() )
         return std::vector< unsigned char >();
 
@@ -284,7 +284,7 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
 {
     std::vector< unsigned char > contents;
 
-#if defined __linux && defined PS_GNOME
+#if HAVE_LIBWNCK
     if (!gdk_init_check(NULL, NULL))
         return std::vector<unsigned char>();
 
