@@ -56,13 +56,17 @@
 #   include <sys/types.h>
 #endif
 
+#if HAVE_SIGNAL_H
+#   include <signal.h>
+#endif
+
+
 #ifdef __APPLE__
 #   include <TargetConditionals.h>
 #   ifdef TARGET_OS_MAC
 #       include <sys/proc_info.h>
 #       include <sys/sysctl.h>
 #       include <libproc.h>
-#       include <signal.h>
 #   endif
 #endif
 
