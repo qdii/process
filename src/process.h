@@ -294,7 +294,7 @@ process<T>::process( const pid_t pid )
     m_title.swap( title ); 
     m_version.swap( version );
 
-#elif defined(__APPLE__) && defined(TARGET_OS_MAC)
+#else
     char * title,
          * name,
          * version,

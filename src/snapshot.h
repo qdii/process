@@ -131,11 +131,11 @@ std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
     std::vector<pid_t> pids;
     pids.resize( max_pids, INVALID_PID );
 
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+#if HAVE_LIBPROC_H
     proc_listpids( PROC_ALL_PIDS, 0,
                    const_cast<pid_t*>(pids.data()),
                    max_pids );
-#elif defined( _WIN32 ) || defined( _WIN64 )
+#elif HAVE_ENUMPROCESSES
     DWORD nbBytes;
     EnumProcesses( const_cast<pid_t*>(pids.data()), 
                    max_pids * sizeof( pid_t ), &nbBytes );
@@ -148,7 +148,7 @@ std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_syscall()
 {
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
+#if HAVE_LIBPROC_H
     const unsigned max_pids = proc_listpids( PROC_ALL_PIDS, 0, nullptr, 0 );
 #else
     const unsigned max_pids = 500;

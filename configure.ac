@@ -50,6 +50,12 @@ AC_CHECK_HEADERS([sys/proc_info.h])
 AC_CHECK_HEADERS([libproc.h])
 AC_CHECK_HEADERS([gdk-pixbuf/gdk-pixbuf.h])
 AC_CHECK_FUNCS([kill])
+AC_CHECK_FUNCS([execve])
+AC_CHECK_FUNCS([fork])
+AC_CHECK_FUNCS([sleep])
+AC_CHECK_FUNCS([signal])
+AC_CHECK_FUNCS([ShellExecute])
+AC_CHECK_FUNCS([EnumProcesses])
 AC_COMPILE_IFELSE(
    [AC_LANG_PROGRAM(
                     [[#include <utility>]],

@@ -336,7 +336,6 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
     return contents;
 }
 
-#if defined(__APPLE__) && defined(TARGET_OS_MAC)
 static inline
 std::string get_icon_path_from_icon_name( std::string bundle_path, 
                                           std::string icon_name )
@@ -353,7 +352,6 @@ std::string get_icon_path_from_icon_name( std::string bundle_path,
 
     return bundle_path + "/Contents/Resources/" + icon_name + ".icns";
 }
-#endif
 
 
 } // ns details

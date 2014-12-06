@@ -1,10 +1,11 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 
+#include "../config.h"
 #include "../src/process.h"
 #include "../src/snapshot.h"
 #include "../src/cocoa.h"
-#if defined __linux || defined __APPLE__
+#if HAVE_SIGNAL_H
 #include <signal.h>
 #endif
 
@@ -13,7 +14,7 @@
 
 static std::string own_name;
 
-#if defined __linux || defined __APPLE__
+#if HAVE_SIGNAL_H
 static volatile bool signaled = false;
 void sig_handler(int signo)
 {
@@ -114,7 +115,7 @@ bool test_icon()
 
 bool test_soft_kill()
 {
-#if defined __linux || defined __APPLE__
+#if HAVE_SIGNAL_H
     // try to kill oneself but catch the signal when it arrives
     signal( SIGTERM, sig_handler );
     ps::snapshot<int> all_processes;
@@ -128,7 +129,7 @@ bool test_soft_kill()
     myself->kill( true );
     sleep(1);
     return signaled;
-#elif defined _WIN32
+#elif HAVE_SHELLEXECUTE
     ShellExecute(NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL);
     Sleep(1);
     ps::snapshot<int> all_processes;
@@ -157,7 +158,7 @@ bool test_soft_kill()
 
 bool test_hard_kill()
 {
-#if defined __linux
+#if HAVE_EXECVE && HAVE_SLEEP && HAVE_FORK
     const pid_t pid = fork();
     if ( pid == 0 )
     {
@@ -172,8 +173,27 @@ bool test_hard_kill()
 
     if ( child_process.kill( true ) == 0 )
         return true;
-#elif defined(_WIN32)
-    if ( test_soft_kill() )
+#elif HAVE_SHELLEXECUTE
+    ShellExecute(NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL);
+    Sleep(1);
+    ps::snapshot<int> all_processes;
+    auto notepad = std::find_if(
+        all_processes.begin(),
+        all_processes.end(),
+        []( const ps::process<int> &t ) { return t.name() == "Notepad"; }
+    );
+
+    if ( notepad == all_processes.end() )
+        return false;
+
+    notepad->kill( false );
+    Sleep(1);
+    ps::snapshot<int> all_processes_after;
+    if (std::find_if(
+        all_processes_after.begin(),
+        all_processes_after.end(),
+        []( const ps::process<int> &t ) { return t.name() == "Notepad"; }
+    ) == all_processes_after.end())
         return true;
 #endif
     return false;
