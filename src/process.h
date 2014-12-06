@@ -40,7 +40,18 @@ namespace details
     }
 #   endif
 
+bool is_cmdline_valid( const std::string & cmdline )
+{
+    if ( cmdline.empty() )
+        return false;
 
+#   if HAVE_BOOST_FILESYSTEM_PATH_HPP
+    if ( !boost::filesystem::is_regular_file( boost::filesystem::path( cmdline ) ) )
+        return false;
+#endif
+
+    return true;
+}
 
 } // ns details
 
@@ -294,7 +305,7 @@ process<T>::process( const pid_t pid )
     m_title.swap( title ); 
     m_version.swap( version );
 
-#else
+#elif HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
     char * title,
          * name,
          * version,
@@ -382,7 +393,7 @@ std::vector< unsigned char > process<T>::icon() const
     if ( icon_data.empty() && !m_icon.empty() )
         icon_data = ps::details::get_icon_from_file( m_icon );
 
-    if ( icon_data.empty() && !cmdline().empty() )
+    if ( icon_data.empty() && is_cmdline_valid( cmdline() ) )
         icon_data = ps::details::get_icon_from_file( cmdline() );
 
     return icon_data;
