@@ -115,6 +115,10 @@
 #   include <winver.h>
 #endif
 
+#if HAVE_PSAPI_H
+#   include <psapi.h>
+#endif
+
 #if HAVE_PROCESSTHREADSAPI_H
 #   include <processthreadsapi.h>
 #endif
@@ -148,8 +152,12 @@ namespace ps
 {
 
 #if HAVE_UNIQUE_PTR
-template<typename T, typename U = std::default_delete<T>>
-using unique_ptr = ::std::unique_ptr<T,U>;
+#   ifdef BOOST_NO_CXX11_TEMPLATE_ALIASES
+    using std::unique_ptr;
+#   else
+    template<typename T, typename U = std::default_delete<T>>
+    using unique_ptr = ::std::unique_ptr<T,U>;
+#   endif
 #elif HAVE_BOOST
 template<typename T, typename U>
 using unique_ptr = ::boost::shared_ptr<T>;
