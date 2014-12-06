@@ -201,7 +201,6 @@ bool test_hard_kill()
 
 bool test_foreground_process()
 {
-    ps::describe( std::cout, ps::get_application_in_foreground<int>() );
     return ps::get_application_in_foreground<int>().valid();
 }
 
