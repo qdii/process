@@ -131,8 +131,8 @@
 #   include <unistd.h>
 #endif
 
-#if HAVE_LINUX_SYSCTL_H
-#   include <linux/sysctl.h>
+#if HAVE_SYS_SYSCTL_H
+#   include <sys/sysctl.h>
 #endif
 
 #if !defined(HAVE_PID_T) || (HAVE_PID_T != 1)
@@ -359,7 +359,7 @@ bool string_ends_in( const std::string & str, const std::string & suffix )
 inline
 std::string get_argv_from_pid( const int pid )
 {
-#if HAVE_UNISTD_H && HAVE_LINUX_SYSCTL_H && DEFINED_KERN_ARGMAX && DEFINED_KERN_PROCARG2
+#if HAVE_UNISTD_H && HAVE_SYS_SYSCTL_H && DEFINED_KERN_ARGMAX && DEFINED_KERN_PROCARGS2
     int    mib[3], argmax, nargs, c = 0;
     char    *procargs, *sp, *np, *cp;
     int show_args = 1;

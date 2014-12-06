@@ -271,7 +271,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_icon );
     LAUNCH_TEST( test_foreground_process );
     LAUNCH_TEST( test_foreground_process_has_icon );
+    LAUNCH_TEST( test_get_argv_from_pid );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
-    LAUNCH_TEST( test_get_argv_from_pid );
 }
