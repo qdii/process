@@ -142,12 +142,13 @@ pid_t get_foreground_pid()
         return 0;
     }
 
-    if ( GetProcessForPID( pid, &psn ) != noErr )
+    if ( GetProcessPID( &psn, &pid ) != noErr )
     {
         [ p release ];
         return 0;
     }
 
+    [ p release ];
     return pid;
 }
 #endif
