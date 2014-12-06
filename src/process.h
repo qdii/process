@@ -379,10 +379,10 @@ std::vector< unsigned char > process<T>::icon() const
 
     std::vector< unsigned char > icon_data = get_icon_from_pid( pid() );
 
-    if ( icon_data.empty() )
+    if ( icon_data.empty() && !m_icon.empty() )
         icon_data = ps::details::get_icon_from_file( m_icon );
 
-    if ( icon_data.empty() )
+    if ( icon_data.empty() && !cmdline().empty() )
         icon_data = ps::details::get_icon_from_file( cmdline() );
 
     return icon_data;

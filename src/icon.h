@@ -226,6 +226,10 @@ get_bitmap_from_hicon( HICON hIcon, const Gdiplus::PixelFormat pixel_format )
 
 std::vector<unsigned char> get_icon_from_file( const std::string & path )
 {
+#if HAVE_BOOST_FILESYSTEM_PATH_HPP
+    assert( boost::filesystem::is_regular_file( boost::filesystem::path( path ) ) );
+#endif
+
 #ifdef HAVE_GDIPLUS_H
     using namespace Gdiplus;
     gdiplus_context _;
