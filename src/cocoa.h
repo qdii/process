@@ -17,6 +17,8 @@ int get_info_from_pid( pid_t pid,
                        char ** version,
                        char ** icon,
                        char ** path );
-#endif
+
+pid_t get_foreground_pid();
+#endif // HAVE_APPKIT...
 
 #endif // PS_COCOA_H

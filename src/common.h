@@ -226,6 +226,33 @@ OS target_os()
 #endif
 }
 
+#if HAVE_WINUSER_H
+template<typename T>
+pid_t get_pid_from_top_window( const HWND window )
+{
+    pid_t pid = INVALID_PID;
+    GetWindowThreadProcessId( window, &pid );
+    return pid;
+}
+
+template<typename T> static
+BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
+{
+    if ( !param )
+        return FALSE;
+
+    std::vector< pid_t > & process_container
+        = *reinterpret_cast< std::vector< pid_t >* >( param );
+
+    const pid_t pid = get_pid_from_top_window<T>( GetTopWindow( window_handle ) );
+
+    if ( pid != INVALID_PID )
+        process_container.push_back( pid );
+
+    return TRUE;
+}
+#endif
+
 #if defined( _WIN32 ) || defined( _WIN64 )
 struct handle : public boost::noncopyable
 {

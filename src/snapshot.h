@@ -30,29 +30,6 @@ public:
     explicit snapshot( flags = ENUMERATE_ALL );
 };
 
-#if defined(WIN32)
-
-template<typename T> static
-BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
-{
-    if ( !param )
-        return FALSE;
-
-    std::vector< pid_t > & process_container
-        = *reinterpret_cast< std::vector< pid_t >* >( param );
-
-    pid_t pid;
-    const auto threadId 
-        = GetWindowThreadProcessId( GetTopWindow( window_handle ), &pid );
-
-    if ( threadId != 0 )
-        process_container.push_back( pid );
-
-    return TRUE;
-}
-#endif
-
-
 template< typename CONTAINER, typename T >
 CONTAINER get_entries_from_window_manager()
 {
@@ -165,7 +142,7 @@ CONTAINER get_entries_from_syscall()
 
 template < typename T > static
 bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
-        process<T> & out )
+        std::string & cmdline, pid_t & pid )
 {
     using namespace boost::filesystem;
 
@@ -176,7 +153,6 @@ bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
         return false;
 
     // we store the pid, which is the *filename* of the entry (/proc/12113)
-    pid_t pid = 0;
     try
     {
         pid = boost::lexical_cast<pid_t>( entry_path.filename().string().c_str() );
@@ -196,20 +172,81 @@ bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
         return false;
 
     // if we do not have the rights to read cmdline, then creating the ifstream may fail
-    std::ifstream cmdline( path_to_cmdline.c_str() );
-    if ( !cmdline.is_open() )
+    std::ifstream cmdline_file( path_to_cmdline.c_str() );
+    if ( !cmdline_file.is_open() )
         return false;
 
     // /proc/11241/cmdline contains the full name of the executable
-    std::string process_name;
-    std::getline( cmdline, process_name );
+    std::getline( cmdline_file, cmdline );
 
-    // kernel threads, for instance, have empty cmdline
-    if ( process_name.empty() )
-        return false;
-
-    out = process<T>( pid, process_name );
     return true;
+}
+
+template < typename T > static inline
+bool read_entry_from_procfs(
+        boost::filesystem::directory_iterator pos,
+        process<T> & out )
+{
+    std::string cmdline;
+    pid_t pid;
+
+    if ( read_entry_from_procfs<T>( pos, cmdline, pid ) )
+    {
+        out = process<T>( pid, cmdline );
+        return true;
+    }
+
+    return false;
+}
+
+
+inline
+std::string get_cmdline_from_pid( const pid_t pid )
+{
+    using namespace ps::details;
+#if HAVE_LIBPROC_H
+    if ( pid == INVALID_PID )
+        return "";
+
+    std::string cmdline;
+    cmdline.resize( PROC_PIDPATHINFO_MAXSIZE);
+
+    const int ret = proc_pidpath(pid, (char*)cmdline.c_str(), cmdline.size());
+    if ( ret <= 0 )
+        return "";
+
+    cmdline.resize( ret );
+    return cmdline;
+#elif HAVE_PSAPI_H
+    handle process_handle( create_handle_from_pid( pid ) );
+
+    if ( process_handle == NULL )
+        return "";
+
+    unique_ptr<char[]> buffer( new char[MAX_PATH] );
+
+    const DWORD length
+        = GetProcessImageFileNameA(
+            process_handle,
+            buffer.get(),
+            MAX_PATH);
+
+    if ( length == 0 )
+        return "";
+
+    return convert_kernel_drive_to_msdos_drive(
+        std::string( buffer.get(), buffer.get() + length ) );
+#else
+    boost::filesystem::directory_iterator pos( "/proc" );
+    for ( ; pos != boost::filesystem::directory_iterator(); ++pos )
+    {
+        std::string cmdline;
+        pid_t current_pid;
+        if ( read_entry_from_procfs<int>( pos, cmdline, current_pid ) && pid == current_pid )
+            return cmdline;
+    }
+    return "";
+#endif
 }
 
 template < typename CONTAINER, typename T > static
@@ -223,7 +260,7 @@ CONTAINER get_entries_from_procfs()
     for ( ; pos != directory_iterator(); ++pos )
     {
         process<T> next_process;
-        if ( read_entry_from_procfs( pos, next_process ) )
+        if ( read_entry_from_procfs<T>( pos, next_process ) )
             all_processes.push_back( PS_MOVE( next_process ) );
     }
 
@@ -279,6 +316,40 @@ template< typename T >
 snapshot<T>::snapshot( typename snapshot<T>::flags flags )
     : std::vector< process<T> >( capture_processes< container, T >( flags ) )
 {
+}
+
+#if !HAVE_APPKIT_NSRUNNINGAPPLICATION_H || !HAVE_APPKIT_NSWORKSPACE_H || !HAVE_FOUNDATION_FOUNDATION_H
+pid_t get_foreground_pid()
+{
+#if HAVE_WINUSER_H
+    return get_pid_from_top_window<int>( GetForegroundWindow() );
+#else
+    return INVALID_PID;
+#endif
+}
+#endif
+
+template< typename T >
+process<T> get_application_in_foreground()
+{
+#if HAVE_LIBWNCK
+    WnckScreen * const screen = wnck_screen_get_default();
+    if ( !screen )
+        return process<T>();
+
+    WnckWindow * const window = wnck_screen_get_active_window( screen );
+    if ( !window )
+        return process<T>();
+
+    const pid_t pid = wnck_window_get_pid( window );
+    return process<T>(
+        pid,
+        get_cmdline_from_pid( pid ),
+        wnck_window_get_name( window )
+        );
+#else
+    return process<T>( get_foreground_pid() );
+#endif
 }
 
 } //namespace 

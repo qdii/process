@@ -128,3 +128,27 @@ int get_info_from_pid( pid_t pid, char ** title,
 }
 #endif
 
+#if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
+pid_t get_foreground_pid()
+{
+    NSAutoreleasePool *p = [NSAutoreleasePool new];
+
+    pid_t pid;
+    ProcessSerialNumber psn = { kNoProcess, kNoProcess };
+ 
+    if ( GetFrontProcess( &psn ) != noErr )
+    {
+        [ p release ];
+        return 0;
+    }
+
+    if ( GetProcessForPID( pid, &psn ) != noErr )
+    {
+        [ p release ];
+        return 0;
+    }
+
+    return pid;
+}
+#endif
+

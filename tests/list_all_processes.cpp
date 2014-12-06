@@ -199,6 +199,12 @@ bool test_hard_kill()
     return false;
 }
 
+bool test_foreground_process()
+{
+    ps::describe( std::cout, ps::get_application_in_foreground<int>() );
+    return ps::get_application_in_foreground<int>().valid();
+}
+
 int main( int, char* argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -211,4 +217,5 @@ int main( int, char* argv[] )
     LAUNCH_TEST( test_icon );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
+    LAUNCH_TEST( test_foreground_process );
 }

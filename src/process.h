@@ -56,50 +56,6 @@ bool is_cmdline_valid( const std::string & cmdline )
 } // ns details
 
 
-inline
-std::string get_cmdline_from_pid( const pid_t pid )
-{
-    using namespace ps::details;
-#if HAVE_LIBPROC_H
-    if ( pid == INVALID_PID )
-        return "";
-
-    std::string cmdline;
-    cmdline.resize( PROC_PIDPATHINFO_MAXSIZE);
-
-    const int ret = proc_pidpath(pid, (char*)cmdline.c_str(), cmdline.size());
-    if ( ret <= 0 ) 
-        return "";
-    
-    cmdline.resize( ret );
-    return cmdline; 
-#elif HAVE_PSAPI_H
-    handle process_handle( create_handle_from_pid( pid ) );
-
-    if ( process_handle == NULL )
-        return "";
-
-    unique_ptr<char[]> buffer( new char[MAX_PATH] );
-
-    const DWORD length 
-        = GetProcessImageFileNameA(
-            process_handle,
-            buffer.get(),
-            MAX_PATH);
-    
-    if ( length == 0 )
-        return "";
-
-    return convert_kernel_drive_to_msdos_drive( 
-        std::string( buffer.get(), buffer.get() + length ) );
-#else
-    (void)pid;
-    return "";
-#endif
-}
-
-
-
 /* @brief Describes a process */
 template< typename T >
 
@@ -263,6 +219,7 @@ process<T>::process( process && copy )
 }
 #endif
 
+std::string get_cmdline_from_pid( pid_t );
 template< typename T >
 process<T>::process( const pid_t pid )
     : m_pid( pid )
