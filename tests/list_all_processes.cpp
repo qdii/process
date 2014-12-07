@@ -204,6 +204,12 @@ bool test_foreground_process()
     return ps::get_application_in_foreground<int>().valid();
 }
 
+bool test_foreground_process_has_icon()
+{
+    const auto foreground_process = ps::get_application_in_foreground<int>();
+    return !foreground_process.icon().empty();
+}
+
 int main( int, char* argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -217,4 +223,5 @@ int main( int, char* argv[] )
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
     LAUNCH_TEST( test_foreground_process );
+    LAUNCH_TEST( test_foreground_process_has_icon );
 }
