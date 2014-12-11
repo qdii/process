@@ -17,7 +17,7 @@ int main()
     for ( const auto & process : running_processes )
     {
         const auto icon = process.icon();
-        std::ofstream( std::string( "" ) + process.pid() + std::string( ".png" )
+        std::ofstream( std::string( "" ) + process.pid() + std::string( ".png" ) )
             .write( (char*)&icon[0], icon.size() );
     }
 }
