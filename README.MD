@@ -2,7 +2,7 @@ Process is a very simple library to quickly find information about running proce
 
 Here is a program that writes current running desktop application's pids and titlebars:
 
-```
+```c++
 #include <iostream>
 #include "snapshot.h"
 int main()
