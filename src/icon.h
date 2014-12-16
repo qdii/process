@@ -23,8 +23,14 @@ struct input_stream
         assert( created != E_INVALIDARG );
     }
 
-    operator IStream*() { return m_istream; }
-    operator const IStream*() const { return m_istream; }
+    operator IStream * ()
+    {
+        return m_istream;
+    }
+    operator const IStream * () const
+    {
+        return m_istream;
+    }
 
     HGLOBAL get_hglobal()
     {
@@ -65,7 +71,7 @@ struct hglobal_lock
     {
         assert( !m_is_locked );
         void * const mem = GlobalLock( m_hglobal );
-        m_is_locked = (mem != nullptr);
+        m_is_locked = ( mem != nullptr );
         return mem;
     }
 
@@ -96,8 +102,8 @@ struct hicon
     explicit
     hicon( const std::string & path )
     {
-    	if( !SHGetFileInfo( path.c_str(), 0, &m_file_info, sizeof(m_file_info),
-                            SHGFI_ICON|SHGFI_LARGEICON ) )
+        if( !SHGetFileInfo( path.c_str(), 0, &m_file_info, sizeof( m_file_info ),
+                            SHGFI_ICON | SHGFI_LARGEICON ) )
         {
             throw cannot_find_icon( path.c_str() );
         }
@@ -138,7 +144,8 @@ private:
 static inline
 CLSID get_encoder_from_mime_type( const std::string & mime )
 {
-    assert ( mime.find("/") != std::string::npos ); // mime types must contain a "/"
+    assert ( mime.find( "/" ) !=
+             std::string::npos ); // mime types must contain a "/"
     using namespace Gdiplus;
 
     UINT  num = 0;          // number of image encoders
@@ -161,21 +168,22 @@ CLSID get_encoder_from_mime_type( const std::string & mime )
     return CLSID();
 }
 static inline
-std::unique_ptr< Gdiplus::Bitmap > 
+std::unique_ptr< Gdiplus::Bitmap >
 get_bitmap_from_hicon( HICON hIcon, const Gdiplus::PixelFormat pixel_format )
 {
     using namespace Gdiplus;
 
     ICONINFO iconInfo;
-    if (!GetIconInfo(hIcon, &iconInfo))
+    if ( !GetIconInfo( hIcon, &iconInfo ) )
         return std::unique_ptr< Bitmap >();
 
     BITMAP iconBmp;
-    if (GetObject(iconInfo.hbmColor, sizeof(BITMAP),&iconBmp) != sizeof(BITMAP))
+    if ( GetObject( iconInfo.hbmColor, sizeof( BITMAP ),
+                    &iconBmp ) != sizeof( BITMAP ) )
         return std::unique_ptr< Bitmap >();
 
-    std::unique_ptr< Bitmap > result( 
-            new Bitmap( iconBmp.bmWidth, iconBmp.bmHeight, pixel_format ) );
+    std::unique_ptr< Bitmap > result(
+        new Bitmap( iconBmp.bmWidth, iconBmp.bmHeight, pixel_format ) );
     assert( result.get() ); // GdiPlus might not have been properly initialized
 
     bool hasAlpha = false;
@@ -186,37 +194,39 @@ get_bitmap_from_hicon( HICON hIcon, const Gdiplus::PixelFormat pixel_format )
     BitmapData bmpData;
     Rect bmBounds( 0, 0, colorBitmap.GetWidth(), colorBitmap.GetHeight() );
 
-    colorBitmap.LockBits( &bmBounds, ImageLockModeRead, colorBitmap.GetPixelFormat(), &bmpData );
-    for (DWORD y = 0; y < bmpData.Height; y++)
+    colorBitmap.LockBits( &bmBounds, ImageLockModeRead,
+                          colorBitmap.GetPixelFormat(), &bmpData );
+    for ( DWORD y = 0; y < bmpData.Height; y++ )
     {
-        byte *pixelBytes = (byte*)bmpData.Scan0 + y*bmpData.Stride;
-        DWORD *pixel   = (DWORD*) pixelBytes;
-        for (DWORD x = 0; x < bmpData.Width; ++x, ++pixel)
+        byte * pixelBytes = ( byte * )bmpData.Scan0 + y * bmpData.Stride;
+        DWORD * pixel   = ( DWORD * ) pixelBytes;
+        for ( DWORD x = 0; x < bmpData.Width; ++x, ++pixel )
         {
-            result->SetPixel(x, y, Color(*pixel));
-            DWORD alpha = (*pixel) >> 24;
-            hasAlpha = hasAlpha || (alpha > 0 && alpha < 255);
+            result->SetPixel( x, y, Color( *pixel ) );
+            DWORD alpha = ( *pixel ) >> 24;
+            hasAlpha = hasAlpha || ( alpha > 0 && alpha < 255 );
         }
     }
 
-    colorBitmap.UnlockBits(&bmpData);
+    colorBitmap.UnlockBits( &bmpData );
 
-    if (hasAlpha)
+    if ( hasAlpha )
         return result;
 
     // If there's no alpha transparency information, we need to use the mask
     // to turn back on visible pixels
 
-    Bitmap maskBitmap(iconInfo.hbmMask,NULL);
+    Bitmap maskBitmap( iconInfo.hbmMask, NULL );
     Color  color, mask;
 
-    for (DWORD y = 0; y < maskBitmap.GetHeight(); y++)
+    for ( DWORD y = 0; y < maskBitmap.GetHeight(); y++ )
     {
-        for (DWORD x = 0; x < maskBitmap.GetWidth(); ++x)
+        for ( DWORD x = 0; x < maskBitmap.GetWidth(); ++x )
         {
-            maskBitmap.GetPixel(x, y, &mask);
-            result->GetPixel(x, y, &color);
-            result->SetPixel(x, y, (color.GetValue()&0xFFFFFF) | (mask.GetValue()==0xffffffff ? 0 : 0xFF000000));				
+            maskBitmap.GetPixel( x, y, &mask );
+            result->GetPixel( x, y, &color );
+            result->SetPixel( x, y, ( color.GetValue() & 0xFFFFFF ) |
+                              ( mask.GetValue() == 0xffffffff ? 0 : 0xFF000000 ) );
         }
     }
 
@@ -251,11 +261,12 @@ std::vector<unsigned char> get_icon_from_file( const std::string & path )
     try
     {
         hglobal_lock memory_lock( input_str.get_hglobal() );
-        unsigned char * const ptr = static_cast<unsigned char*>( memory_lock.lock() );
+        unsigned char * const ptr = static_cast<unsigned char *>( memory_lock.lock() );
         if ( ptr == nullptr )
             return std::vector<unsigned char>();
 
-        return std::vector<unsigned char>( ptr, ptr + GlobalSize(input_str.get_hglobal()) );
+        return std::vector<unsigned char>( ptr,
+                                           ptr + GlobalSize( input_str.get_hglobal() ) );
     }
     catch( cannot_lock_hglobal & )
     {
@@ -270,12 +281,12 @@ std::vector<unsigned char> get_icon_from_file( const std::string & path )
     if ( !icon_file )
         return std::vector< unsigned char >();
 
-    icon_file.seekg(0,std::ios::end);
+    icon_file.seekg( 0, std::ios::end );
     const auto length = icon_file.tellg();
-    icon_file.seekg(0,std::ios::beg);
+    icon_file.seekg( 0, std::ios::beg );
 
     std::vector< unsigned char > contents( length );
-    icon_file.read( reinterpret_cast<char*>(&contents[0]), length );
+    icon_file.read( reinterpret_cast<char *>( &contents[0] ), length );
 
     if ( icon_file.gcount() == length )
         return contents;
@@ -289,7 +300,7 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
     std::vector< unsigned char > contents;
 
 #if HAVE_LIBWNCK
-    if (!gdk_init_check(NULL, NULL))
+    if ( !gdk_init_check( NULL, NULL ) )
         return std::vector<unsigned char>();
 
     WnckScreen * const screen
@@ -298,12 +309,13 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
     if ( !screen )
         return std::vector<unsigned char>();
 
-    wnck_screen_force_update(screen);
+    wnck_screen_force_update( screen );
 
-    for (GList * window_l = wnck_screen_get_windows (screen); window_l != NULL; window_l = window_l->next)
+    for ( GList * window_l = wnck_screen_get_windows ( screen ); window_l != NULL;
+            window_l = window_l->next )
     {
-        WnckWindow * window = WNCK_WINDOW(window_l->data);
-        if (!window)
+        WnckWindow * window = WNCK_WINDOW( window_l->data );
+        if ( !window )
             continue;
 
         const pid_t window_pid = wnck_window_get_pid( window );
@@ -326,7 +338,8 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
             try
             {
                 contents.assign( buffer, buffer + buffer_size );
-            } catch( ... )
+            }
+            catch( ... )
             {
             }
             g_free( buffer );
@@ -335,24 +348,24 @@ std::vector< unsigned char > get_icon_from_pid( const pid_t pid )
         break;
     }
 #else
-    (void)pid;
+    ( void )pid;
 #endif
     return contents;
 }
 
 static inline
-std::string get_icon_path_from_icon_name( std::string bundle_path, 
-                                          std::string icon_name )
+std::string get_icon_path_from_icon_name( std::string bundle_path,
+        std::string icon_name )
 {
     assert( !bundle_path.empty() );
     assert( !icon_name.empty() );
     std::string resources_folder = bundle_path + "/Contents/Resources/";
 
     // sometimes the file is already in PNG format
-    if ( string_ends_in( icon_name, ".png" ) 
+    if ( string_ends_in( icon_name, ".png" )
             || string_ends_in( icon_name, ".icns" )
             || string_ends_in( icon_name, ".PNG" ) )
-       return resources_folder + icon_name;
+        return resources_folder + icon_name;
 
     return bundle_path + "/Contents/Resources/" + icon_name + ".icns";
 }

@@ -17,6 +17,6 @@ int main()
         }
 
         std::ofstream( p.title(), std::ios_base::binary )
-            .write( reinterpret_cast< char* >(&icon_data[0]), icon_data.size() );
+        .write( reinterpret_cast< char * >( &icon_data[0] ), icon_data.size() );
     }
 }

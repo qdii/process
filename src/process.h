@@ -14,30 +14,30 @@ namespace ps
 namespace details
 {
 #   if HAVE_WINVER_H
-    static inline
-    std::string get_specific_file_info(
-        unsigned char * const data,
-        const WORD language, const WORD codepage,
-        const std::string & info_type )
-    {
-        unsigned size;
-        char* info;
-        std::ostringstream subblock;
-        subblock << "\\StringFileInfo\\"
-                    << std::hex << std::setw(4) << std::setfill('0') << language
-                    << std::hex << std::setw(4) << std::setfill('0') << codepage
-                    << "\\" << info_type;
+static inline
+std::string get_specific_file_info(
+    unsigned char * const data,
+    const WORD language, const WORD codepage,
+    const std::string & info_type )
+{
+    unsigned size;
+    char * info;
+    std::ostringstream subblock;
+    subblock << "\\StringFileInfo\\"
+             << std::hex << std::setw( 4 ) << std::setfill( '0' ) << language
+             << std::hex << std::setw( 4 ) << std::setfill( '0' ) << codepage
+             << "\\" << info_type;
 
-        if (!VerQueryValue(data,
-                subblock.str().c_str(),
-                reinterpret_cast<LPVOID*>(&info),
-                &size 
-            ))
-            return "";
-        assert( size != 0 );
+    if ( !VerQueryValue( data,
+                         subblock.str().c_str(),
+                         reinterpret_cast<LPVOID *>( &info ),
+                         &size
+                       ) )
+        return "";
+    assert( size != 0 );
 
-        return std::string( info, size-1 );
-    }
+    return std::string( info, size - 1 );
+}
 #   endif
 
 bool is_cmdline_valid( const std::string & cmdline )
@@ -61,18 +61,18 @@ struct process
 {
     /**@brief Constructs a process from the given pid
      *
-     * This constructor will automatically try and retrieve the data for 
+     * This constructor will automatically try and retrieve the data for
      * title, name, etc. from the pid
      * @param[in] pid The process id given by the OS */
     explicit
     process( pid_t pid );
 
     /**@brief Constructs a process, and manually assign all the information to it
-     * @param[in] cmdline The absolute path to the binary executable 
+     * @param[in] cmdline The absolute path to the binary executable
      * @param[in] title The title of the process. The most human-friendly one. Like "Skype".
      * @param[in] name The name of the process, as perceived by the OS. Could be something like Microsoft.Skype
      * @param[in] version The version being run */
-    process( pid_t pid, 
+    process( pid_t pid,
              const std::string & cmdline,
              const std::string & title   = "",
              const std::string & name    = "",
@@ -112,7 +112,7 @@ struct process
      *
      * For instance, on linux it could be "gnu-tar" */
     std::string name() const;
-    
+
     /**@brief Returns the version of the application, if it was provided */
     std::string version() const;
 
@@ -120,7 +120,7 @@ struct process
      *
      * On Windows, this function returns a PNG file.
      * On Mac, this function returns a ICNS file.
-     * @warning This function is SLOW. 
+     * @warning This function is SLOW.
              It reads from the disk and perform all sorts of slow things.
      * @throw cannot_find_icon When file information from the executable cannot be accessed. */
     std::vector< unsigned char > icon() const;
@@ -129,7 +129,10 @@ struct process
      *        a process (even a non-running, or non-existing one) */
     bool valid() const;
 
-    pid_t pid() const { return m_pid; }
+    pid_t pid() const
+    {
+        return m_pid;
+    }
 
     /**@brief Kills the process
      * @param[in] softly When set to true, calling this method will only notify the process that it should terminate. Otherwise it will send a fatal signal
@@ -148,11 +151,11 @@ private:
 };
 
 inline
-process::process( pid_t pid, 
-                     const std::string & cmdline,
-                     const std::string & title,
-                     const std::string & name,
-                     const std::string & version )
+process::process( pid_t pid,
+                  const std::string & cmdline,
+                  const std::string & title,
+                  const std::string & name,
+                  const std::string & version )
     : m_pid( pid )
     , m_cmdline( cmdline )
     , m_title( title )
@@ -235,27 +238,30 @@ process::process( const pid_t pid )
         return;
 
     unique_ptr< unsigned char[] > data( new unsigned char[size] );
-    if (!GetFileVersionInfo( m_cmdline.c_str(), 0, size, data.get() ))
+    if ( !GetFileVersionInfo( m_cmdline.c_str(), 0, size, data.get() ) )
         return;
 
-    struct LANGANDCODEPAGE 
+    struct LANGANDCODEPAGE
     {
-      WORD language;
-      WORD codepage;
+        WORD language;
+        WORD codepage;
     } * translate;
 
-    if ( !VerQueryValue(data.get(), 
-                        "\\VarFileInfo\\Translation",
-                        reinterpret_cast<LPVOID*>(&translate),
-                        &size) )
+    if ( !VerQueryValue( data.get(),
+                         "\\VarFileInfo\\Translation",
+                         reinterpret_cast<LPVOID *>( &translate ),
+                         &size ) )
         return;
 
-    std::string name      = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "InternalName"   );
-    std::string title     = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductName"    );
-    std::string version   = details::get_specific_file_info( data.get(), translate[0].language, translate[0].codepage, "ProductVersion" );
+    std::string name      = details::get_specific_file_info( data.get(),
+                            translate[0].language, translate[0].codepage, "InternalName"   );
+    std::string title     = details::get_specific_file_info( data.get(),
+                            translate[0].language, translate[0].codepage, "ProductName"    );
+    std::string version   = details::get_specific_file_info( data.get(),
+                            translate[0].language, translate[0].codepage, "ProductVersion" );
 
     m_name.swap( name );
-    m_title.swap( title ); 
+    m_title.swap( title );
     m_version.swap( version );
 
 #elif HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
@@ -264,7 +270,7 @@ process::process( const pid_t pid )
          * version,
          * icon,
          * path;
-    const int success = 
+    const int success =
         get_info_from_pid( pid, &title, &name, &version, &icon, &path );
 
     if ( success != 0 )
@@ -277,23 +283,23 @@ process::process( const pid_t pid )
     assert( icon    != nullptr );
 
     // RAII structures to make sure the memory is free when going out of scope
-    unique_ptr< char, void (*)(void*) > title_ptr  ( title, &std::free );
-    unique_ptr< char, void (*)(void*) > name_ptr   ( name, &std::free );
-    unique_ptr< char, void (*)(void*) > version_ptr( version, &std::free );
-    unique_ptr< char, void (*)(void*) > icon_ptr   ( icon, &std::free );
-    unique_ptr< char, void (*)(void*) > path_ptr   ( path, &std::free );
+    unique_ptr< char, void ( * )( void * ) > title_ptr  ( title, &std::free );
+    unique_ptr< char, void ( * )( void * ) > name_ptr   ( name, &std::free );
+    unique_ptr< char, void ( * )( void * ) > version_ptr( version, &std::free );
+    unique_ptr< char, void ( * )( void * ) > icon_ptr   ( icon, &std::free );
+    unique_ptr< char, void ( * )( void * ) > path_ptr   ( path, &std::free );
 
     m_name.assign( name );
     m_title.assign( title );
-    m_version.assign( version);
+    m_version.assign( version );
 
     std::string bundle_path ( path ),
-                icon_name   ( icon );
+        icon_name   ( icon );
 
     if ( !bundle_path.empty() && !icon_name.empty() )
-        m_icon.assign( 
-            get_icon_path_from_icon_name( bundle_path, 
-                                          icon_name ) ); 
+        m_icon.assign(
+            get_icon_path_from_icon_name( bundle_path,
+                                          icon_name ) );
 #endif
 }
 
@@ -380,8 +386,8 @@ int process::kill( const bool softly ) const
         return -2;
 
     assert( killed == 0 );
-#elif HAVE_WINBASE_H || HAVE_PROCESSTHREADSAPI_H 
-    (void)softly;
+#elif HAVE_WINBASE_H || HAVE_PROCESSTHREADSAPI_H
+    ( void )softly;
     const auto handle = create_handle_from_pid( m_pid, PROCESS_TERMINATE );
     if ( handle == NULL )
         return -1;
@@ -396,10 +402,10 @@ int process::kill( const bool softly ) const
 inline
 void describe( std::ostream & ostr, const process & proc )
 {
-    ostr << "pid: " << proc.pid() 
-         << ", title: \"" << proc.title() 
-         << "\", name: \"" << proc.name() 
-         << "\", cmdline: \"" << proc.cmdline() 
+    ostr << "pid: " << proc.pid()
+         << ", title: \"" << proc.title()
+         << "\", name: \"" << proc.name()
+         << "\", cmdline: \"" << proc.cmdline()
          << "\", version: \"" << proc.version()
          << "\"\n";
 }

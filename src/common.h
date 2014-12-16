@@ -86,9 +86,9 @@
 #endif
 
 #ifdef BOOST_NO_CXX11_CONSTEXPR
-#	define PS_CONSTEXPR const
+#   define PS_CONSTEXPR const
 #else
-#	define PS_CONSTEXPR constexpr
+#   define PS_CONSTEXPR constexpr
 #endif
 
 #if HAVE_WINDOWS_H
@@ -129,9 +129,9 @@
 
 #if !defined(HAVE_PID_T) || (HAVE_PID_T != 1)
 #   if HAVE_DWORD
-    typedef DWORD pid_t;
+typedef DWORD pid_t;
 #   else
-    typedef unsigned pid_t;
+typedef unsigned pid_t;
 #   endif
 #endif
 
@@ -153,10 +153,10 @@ namespace ps
 
 #if HAVE_UNIQUE_PTR
 #   ifdef BOOST_NO_CXX11_TEMPLATE_ALIASES
-    using std::unique_ptr;
+using std::unique_ptr;
 #   else
-    template<typename T, typename U = std::default_delete<T>>
-    using unique_ptr = ::std::unique_ptr<T,U>;
+template<typename T, typename U = std::default_delete<T>>
+using unique_ptr = ::std::unique_ptr<T, U>;
 #   endif
 #elif HAVE_BOOST
 template<typename T, typename U>
@@ -166,7 +166,8 @@ using unique_ptr = ::boost::shared_ptr<T>;
 struct cannot_find_icon : std::exception
 {
     cannot_find_icon( const char * file_name )
-        : error_message( std::string("cannot find icon for path: \"") + file_name + "\"" )
+        : error_message( std::string( "cannot find icon for path: \"" ) + file_name +
+                         "\"" )
     {
     }
 
@@ -182,7 +183,7 @@ static PS_CONSTEXPR pid_t INVALID_PID = 0;
 
 namespace details
 {
-    
+
 #if HAVE_WINUSER_H
 template<typename T>
 pid_t get_pid_from_top_window( const HWND window )
@@ -213,45 +214,52 @@ BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
 #if defined( _WIN32 ) || defined( _WIN64 )
 struct handle : public boost::noncopyable
 {
-	handle(HANDLE h)
-		: m_h( h )
-	{
-	}
+    handle( HANDLE h )
+        : m_h( h )
+    {
+    }
 
-    handle( handle&& h )
+    handle( handle && h )
         : m_h( h.m_h )
     {
         h.m_h = NULL;
     }
 
-    handle& operator=( handle & ); // non-defined
-    handle& operator=( handle && other )
+    handle & operator=( handle & ); // non-defined
+    handle & operator=( handle && other )
     {
         m_h = other.m_h;
         other.m_h = NULL;
         return *this;
     }
 
-    handle& operator=(HANDLE h)
+    handle & operator=( HANDLE h )
     {
         m_h = h;
         return *this;
     }
 
-	~handle() { if (m_h) CloseHandle( m_h ); }
-	operator HANDLE() const { return m_h; }
+    ~handle()
+    {
+        if ( m_h ) CloseHandle( m_h );
+    }
+    operator HANDLE() const
+    {
+        return m_h;
+    }
 
 private:
-	HANDLE m_h;
+    HANDLE m_h;
 };
 
 inline
-handle create_handle_from_pid( const pid_t pid, const DWORD other_privileges = 0)
+handle create_handle_from_pid( const pid_t pid,
+                               const DWORD other_privileges = 0 )
 {
     HANDLE h =
         OpenProcess( PROCESS_QUERY_INFORMATION |
-                       PROCESS_VM_READ | other_privileges,
-                       FALSE, pid );
+                     PROCESS_VM_READ | other_privileges,
+                     FALSE, pid );
 
     if ( h == NULL )
         h = OpenProcess( PROCESS_QUERY_LIMITED_INFORMATION |
@@ -273,8 +281,8 @@ std::vector< std::string > get_all_msdos_drives()
         return std::vector< std::string >();
 
     std::vector< std::string > drives;
-    for( const char *ptr = buffer.get(); *ptr != '\0'; 
-         ptr += drives.back().size() + 1 )
+    for( const char * ptr = buffer.get(); *ptr != '\0';
+            ptr += drives.back().size() + 1 )
     {
         drives.push_back( std::string( ptr ) );
     }
@@ -290,7 +298,8 @@ std::string get_kernel_drive( const std::string & msdos_drive )
     assert( msdos_drive.size() == 2 ); // "C:"
 
     std::unique_ptr<char[]> buffer( new char[MAX_PATH] );
-    const auto length = QueryDosDeviceA( msdos_drive.c_str(), buffer.get(), MAX_PATH );
+    const auto length = QueryDosDeviceA( msdos_drive.c_str(), buffer.get(),
+                                         MAX_PATH );
     return length ? std::string( buffer.get() ) : "";
 }
 
@@ -313,7 +322,10 @@ std::string convert_kernel_drive_to_msdos_drive( std::string user_path )
 
     for ( std::string drive : all_msdos_drives )
     {
-        boost::trim_right_if( drive, []( char c ){ return c == '\\'; } );
+        boost::trim_right_if( drive, []( char c )
+        {
+            return c == '\\';
+        } );
         const std::string kernel_drive = get_kernel_drive( drive );
 
         // some network drives are not necessarily mapped

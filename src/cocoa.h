@@ -5,7 +5,7 @@
 
 #if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
 // the caller is responsible for freeing the memory of every string
-int get_desktop_applications( pid_t * pidArray, 
+int get_desktop_applications( pid_t * pidArray,
                               char ** bundleIdentifierArray,
                               char ** bundleNameArray,
                               int length );

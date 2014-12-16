@@ -12,7 +12,7 @@ namespace ps
 /**@struct snapshot
  * @brief A snapshot of all running processes at a given moment
  */
-struct snapshot : public std::vector< process > 
+struct snapshot : public std::vector< process >
 {
 private:
     typedef std::vector< process > container;
@@ -35,7 +35,7 @@ CONTAINER get_entries_from_window_manager()
     CONTAINER processes;
 #if HAVE_LIBWNCK
 
-    if (!gdk_init_check(NULL, NULL))
+    if ( !gdk_init_check( NULL, NULL ) )
         return CONTAINER();
 
     WnckScreen * const screen
@@ -44,12 +44,13 @@ CONTAINER get_entries_from_window_manager()
     if ( !screen )
         return CONTAINER();
 
-    wnck_screen_force_update(screen);
+    wnck_screen_force_update( screen );
 
-    for (GList * window_l = wnck_screen_get_windows (screen); window_l != NULL; window_l = window_l->next)
+    for ( GList * window_l = wnck_screen_get_windows ( screen ); window_l != NULL;
+            window_l = window_l->next )
     {
-        WnckWindow * window = WNCK_WINDOW(window_l->data);
-        if (!window)
+        WnckWindow * window = WNCK_WINDOW( window_l->data );
+        if ( !window )
             continue;
 
         const pid_t pid = wnck_window_get_pid( window );
@@ -58,12 +59,12 @@ CONTAINER get_entries_from_window_manager()
             pid,
             get_cmdline_from_pid( pid ),
             wnck_window_get_name( window )
-            );
+        );
     }
 #elif HAVE_WINUSER_H
 
     std::vector< pid_t > pids;
-    if ( !EnumWindows( &find_pid_from_window, reinterpret_cast<LPARAM>(&pids) ) )
+    if ( !EnumWindows( &find_pid_from_window, reinterpret_cast<LPARAM>( &pids ) ) )
         return CONTAINER();
 
     for ( const pid_t pid : pids )
@@ -74,18 +75,18 @@ CONTAINER get_entries_from_window_manager()
         get_desktop_applications( nullptr, nullptr, nullptr, 0 );
 
     std::vector< pid_t > pidArray( nbApplications );
-    std::vector< char* > bundleIdentifierArray( nbApplications );
-    std::vector< char* > bundleNameArray( nbApplications );
-    const int success = get_desktop_applications( 
-            const_cast<pid_t*>( pidArray.data() ),
-            const_cast<char **>( bundleIdentifierArray.data() ),
-            const_cast<char **>( bundleNameArray.data() ),
-            nbApplications
-            );
+    std::vector< char * > bundleIdentifierArray( nbApplications );
+    std::vector< char * > bundleNameArray( nbApplications );
+    const int success = get_desktop_applications(
+                            const_cast<pid_t *>( pidArray.data() ),
+                            const_cast<char **>( bundleIdentifierArray.data() ),
+                            const_cast<char **>( bundleNameArray.data() ),
+                            nbApplications
+                        );
     if ( success < 0 )
         goto exit;
 
-    for ( int i=0; i<success; ++i )
+    for ( int i = 0; i < success; ++i )
     {
         if ( pidArray[i] == INVALID_PID )
             continue;
@@ -94,7 +95,8 @@ CONTAINER get_entries_from_window_manager()
     }
 
 exit:
-    std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(), &free );
+    std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(),
+                   &free );
     std::for_each( bundleNameArray.begin(), bundleNameArray.end(), &free );
 
 #endif
@@ -109,11 +111,11 @@ std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
 
 #if HAVE_LIBPROC_H
     proc_listpids( PROC_ALL_PIDS, 0,
-                   const_cast<pid_t*>(pids.data()),
+                   const_cast<pid_t *>( pids.data() ),
                    max_pids );
 #elif HAVE_ENUMPROCESSES
     DWORD nbBytes;
-    EnumProcesses( const_cast<pid_t*>(pids.data()), 
+    EnumProcesses( const_cast<pid_t *>( pids.data() ),
                    max_pids * sizeof( pid_t ), &nbBytes );
     pids.resize( nbBytes / sizeof( pid_t ) );
 #endif
@@ -130,18 +132,18 @@ CONTAINER get_entries_from_syscall()
     const unsigned max_pids = 500;
 #endif
 
-    std::vector<pid_t> running_pids 
+    std::vector<pid_t> running_pids
         = get_running_process_ids( max_pids );
 
     return CONTAINER(
-        running_pids.begin(),
-        std::remove( running_pids.begin(), running_pids.end(), INVALID_PID )
-    );
+               running_pids.begin(),
+               std::remove( running_pids.begin(), running_pids.end(), INVALID_PID )
+           );
 }
 
 static inline
 bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
-        std::string & cmdline, pid_t & pid )
+                             std::string & cmdline, pid_t & pid )
 {
     using namespace boost::filesystem;
 
@@ -183,8 +185,8 @@ bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
 
 static inline
 bool read_entry_from_procfs(
-        boost::filesystem::directory_iterator pos,
-        process & out )
+    boost::filesystem::directory_iterator pos,
+    process & out )
 {
     std::string cmdline;
     pid_t pid;
@@ -208,9 +210,9 @@ std::string get_cmdline_from_pid( const pid_t pid )
         return "";
 
     std::string cmdline;
-    cmdline.resize( PROC_PIDPATHINFO_MAXSIZE);
+    cmdline.resize( PROC_PIDPATHINFO_MAXSIZE );
 
-    const int ret = proc_pidpath(pid, (char*)cmdline.c_str(), cmdline.size());
+    const int ret = proc_pidpath( pid, ( char * )cmdline.c_str(), cmdline.size() );
     if ( ret <= 0 )
         return "";
 
@@ -226,15 +228,15 @@ std::string get_cmdline_from_pid( const pid_t pid )
 
     const DWORD length
         = GetProcessImageFileNameA(
-            process_handle,
-            buffer.get(),
-            MAX_PATH);
+              process_handle,
+              buffer.get(),
+              MAX_PATH );
 
     if ( length == 0 )
         return "";
 
     return convert_kernel_drive_to_msdos_drive(
-        std::string( buffer.get(), buffer.get() + length ) );
+               std::string( buffer.get(), buffer.get() + length ) );
 #else
     boost::filesystem::directory_iterator pos( "/proc" );
     for ( ; pos != boost::filesystem::directory_iterator(); ++pos )
@@ -275,16 +277,20 @@ CONTAINER capture_processes( typename snapshot::flags flags )
     if ( flags & snapshot::ENUMERATE_BSD_APPS )
     {
         const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER >();
-        all_processes.insert( all_processes.end(), bsd_processes.begin(), bsd_processes.end() );
+        all_processes.insert( all_processes.end(), bsd_processes.begin(),
+                              bsd_processes.end() );
 
         const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER >();
-        all_processes.insert( all_processes.end(), procfs_entries.begin(), procfs_entries.end() );
+        all_processes.insert( all_processes.end(), procfs_entries.begin(),
+                              procfs_entries.end() );
     }
 
     if ( flags & snapshot::ENUMERATE_DESKTOP_APPS )
     {
-        const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER >();
-        all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
+        const CONTAINER gui_applications =
+            get_entries_from_window_manager< CONTAINER >();
+        all_processes.insert( all_processes.end(), gui_applications.begin(),
+                              gui_applications.end() );
     }
 
     return all_processes;
@@ -320,16 +326,16 @@ process get_application_in_foreground()
 
     const pid_t pid = wnck_window_get_pid( window );
     return process(
-        pid,
-        get_cmdline_from_pid( pid ),
-        wnck_window_get_name( window )
-        );
+               pid,
+               get_cmdline_from_pid( pid ),
+               wnck_window_get_name( window )
+           );
 #else
     return process( get_foreground_pid() );
 #endif
 }
 
-} //namespace 
+} //namespace
 
 #endif
 

@@ -16,7 +16,7 @@ static std::string own_name;
 
 #if HAVE_SIGNAL_H
 static volatile bool signaled = false;
-void sig_handler(int signo)
+void sig_handler( int signo )
 {
     if ( signo == SIGTERM )
         signaled = true;
@@ -46,10 +46,10 @@ bool count_processes()
     unsigned count = 0;
     ps::snapshot all_processes;
     for ( auto first( all_processes.begin() ),
-               last ( all_processes.end()   );
-               first != last; first++        )
+            last ( all_processes.end()   );
+            first != last; first++        )
     {
-        if (!(*first).valid())
+        if ( !( *first ).valid() )
             continue;
 
         count++;
@@ -74,10 +74,13 @@ bool find_myself()
     using boost::filesystem::path;
     ps::snapshot all_processes;
     return std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return equivalent(path(t.cmdline()), path(own_name)); } 
-    ) != all_processes.end();
+               all_processes.begin(),
+               all_processes.end(),
+               []( const ps::process & t )
+    {
+        return equivalent( path( t.cmdline() ), path( own_name ) );
+    }
+           ) != all_processes.end();
 }
 
 bool test_version()
@@ -85,10 +88,13 @@ bool test_version()
     // find at least one process which version is not null
     ps::snapshot all_processes;
     return std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return !t.version().empty(); } 
-    ) != all_processes.end();
+               all_processes.begin(),
+               all_processes.end(),
+               []( const ps::process & t )
+    {
+        return !t.version().empty();
+    }
+           ) != all_processes.end();
 }
 
 bool test_title()
@@ -96,10 +102,13 @@ bool test_title()
     // find at least one process which title is not null
     ps::snapshot all_processes;
     return std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return !t.title().empty(); } 
-    ) != all_processes.end();
+               all_processes.begin(),
+               all_processes.end(),
+               []( const ps::process & t )
+    {
+        return !t.title().empty();
+    }
+           ) != all_processes.end();
 }
 
 bool test_icon()
@@ -107,10 +116,13 @@ bool test_icon()
     // find at least one process which icon is not an empty array
     ps::snapshot all_processes;
     return std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return !t.icon().empty(); } 
-    ) != all_processes.end();
+               all_processes.begin(),
+               all_processes.end(),
+               []( const ps::process & t )
+    {
+        return !t.icon().empty();
+    }
+           ) != all_processes.end();
 }
 
 bool test_soft_kill()
@@ -121,36 +133,45 @@ bool test_soft_kill()
     ps::snapshot all_processes;
 
     auto myself = std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return t.pid() == getpid(); } 
-    );
+                      all_processes.begin(),
+                      all_processes.end(),
+                      []( const ps::process & t )
+    {
+        return t.pid() == getpid();
+    }
+                  );
 
     myself->kill( true );
-    sleep(1);
+    sleep( 1 );
     return signaled;
 #elif HAVE_SHELLEXECUTE
-    ShellExecute(NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL);
-    Sleep(1);
+    ShellExecute( NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL );
+    Sleep( 1 );
     ps::snapshot all_processes;
     auto notepad = std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return t.name() == "Notepad"; }
-    );
+                       all_processes.begin(),
+                       all_processes.end(),
+                       []( const ps::process & t )
+    {
+        return t.name() == "Notepad";
+    }
+                   );
 
     if ( notepad == all_processes.end() )
         return false;
 
     notepad->kill( true );
-    Sleep(1);
+    Sleep( 1 );
     ps::snapshot all_processes_after;
-    if (std::find_if(
-        all_processes_after.begin(),
-        all_processes_after.end(),
-        []( const ps::process &t ) { return t.name() == "Notepad"; }
-    ) == all_processes_after.end())
-        return true;
+    if ( std::find_if(
+                all_processes_after.begin(),
+                all_processes_after.end(),
+                []( const ps::process & t )
+{
+    return t.name() == "Notepad";
+    }
+            ) == all_processes_after.end() )
+    return true;
 
 #endif
     return false;
@@ -162,11 +183,11 @@ bool test_hard_kill()
     const pid_t pid = fork();
     if ( pid == 0 )
     {
-        char * const argv[] = { (char*)"/usr/bin/sleep",(char*)"5", NULL };
+        char * const argv[] = { ( char * )"/usr/bin/sleep", ( char * )"5", NULL };
         execve( "/usr/bin/sleep", argv, nullptr );
     }
 
-    sleep(1);
+    sleep( 1 );
     ps::process child_process( pid );
     if ( !child_process.valid() )
         return false;
@@ -174,27 +195,33 @@ bool test_hard_kill()
     if ( child_process.kill( true ) == 0 )
         return true;
 #elif HAVE_SHELLEXECUTE
-    ShellExecute(NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL);
-    Sleep(1);
+    ShellExecute( NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL );
+    Sleep( 1 );
     ps::snapshot all_processes;
     auto notepad = std::find_if(
-        all_processes.begin(),
-        all_processes.end(),
-        []( const ps::process &t ) { return t.name() == "Notepad"; }
-    );
+                       all_processes.begin(),
+                       all_processes.end(),
+                       []( const ps::process & t )
+    {
+        return t.name() == "Notepad";
+    }
+                   );
 
     if ( notepad == all_processes.end() )
         return false;
 
     notepad->kill( false );
-    Sleep(1);
+    Sleep( 1 );
     ps::snapshot all_processes_after;
-    if (std::find_if(
-        all_processes_after.begin(),
-        all_processes_after.end(),
-        []( const ps::process &t ) { return t.name() == "Notepad"; }
-    ) == all_processes_after.end())
-        return true;
+    if ( std::find_if(
+                all_processes_after.begin(),
+                all_processes_after.end(),
+                []( const ps::process & t )
+{
+    return t.name() == "Notepad";
+    }
+            ) == all_processes_after.end() )
+    return true;
 #endif
     return false;
 }
@@ -210,7 +237,7 @@ bool test_foreground_process_has_icon()
     return !foreground_process.icon().empty();
 }
 
-int main( int, char* argv[] )
+int main( int, char * argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
     LAUNCH_TEST( count_processes );
