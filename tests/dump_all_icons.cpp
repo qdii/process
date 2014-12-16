@@ -4,8 +4,8 @@
 
 int main()
 {
-    ps::snapshot<int> all_processes;
-    for ( const ps::process<int> & p : all_processes )
+    ps::snapshot all_processes;
+    for ( const ps::process & p : all_processes )
     {
         std::vector< unsigned char > icon_data = p.icon();
 

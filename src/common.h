@@ -201,7 +201,7 @@ BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
     std::vector< pid_t > & process_container
         = *reinterpret_cast< std::vector< pid_t >* >( param );
 
-    const pid_t pid = get_pid_from_top_window<T>( GetTopWindow( window_handle ) );
+    const pid_t pid = get_pid_from_top_window( GetTopWindow( window_handle ) );
 
     if ( pid != INVALID_PID )
         process_container.push_back( pid );

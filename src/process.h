@@ -55,10 +55,6 @@ bool is_cmdline_valid( const std::string & cmdline )
 
 } // ns details
 
-
-/* @brief Describes a process */
-template< typename T >
-
 /**@struct process
  * @brief describes a process */
 struct process
@@ -151,8 +147,8 @@ private:
     std::string m_icon;
 };
 
-template< typename T >
-process<T>::process( pid_t pid, 
+inline
+process::process( pid_t pid, 
                      const std::string & cmdline,
                      const std::string & title,
                      const std::string & name,
@@ -166,8 +162,8 @@ process<T>::process( pid_t pid,
 {
 }
 
-template< typename T >
-process<T> & process<T>::operator=( const process & other )
+inline
+process & process::operator=( const process & other )
 {
     m_pid     = other.m_pid;
     m_cmdline = other.m_cmdline;
@@ -180,8 +176,8 @@ process<T> & process<T>::operator=( const process & other )
 }
 
 #if HAVE_STD__MOVE
-template< typename T >
-process<T> & process<T>::operator=( process && other )
+inline
+process & process::operator=( process && other )
 {
     m_pid     = std::move( other.m_pid );
     m_cmdline = std::move( other.m_cmdline );
@@ -194,8 +190,8 @@ process<T> & process<T>::operator=( process && other )
 }
 #endif
 
-template< typename T >
-process<T>::process( const process & copy )
+inline
+process::process( const process & copy )
     : m_pid(     copy.m_pid     )
     , m_cmdline( copy.m_cmdline )
     , m_title(   copy.m_title   )
@@ -207,8 +203,8 @@ process<T>::process( const process & copy )
 
 
 #if HAVE_STD__MOVE
-template< typename T >
-process<T>::process( process && copy )
+inline
+process::process( process && copy )
     : m_pid(        std::move( copy.m_pid ) )
     , m_cmdline(    std::move( copy.m_cmdline ) )
     , m_title(      std::move( copy.m_title ) )
@@ -220,8 +216,8 @@ process<T>::process( process && copy )
 #endif
 
 std::string get_cmdline_from_pid( pid_t );
-template< typename T >
-process<T>::process( const pid_t pid )
+inline
+process::process( const pid_t pid )
     : m_pid( pid )
     , m_cmdline( get_cmdline_from_pid( pid ) )
     , m_title( "" )
@@ -301,8 +297,8 @@ process<T>::process( const pid_t pid )
 #endif
 }
 
-template< typename T >
-process<T>::process()
+inline
+process::process()
     : m_pid( INVALID_PID )
     , m_cmdline( "" )
     , m_title( "" )
@@ -311,36 +307,36 @@ process<T>::process()
 {
 }
 
-template< typename T >
-process<T>::~process()
+inline
+process::~process()
 {
     //assert( !valid() || m_cmdline.empty() ||
     //    boost::filesystem::exists( m_cmdline ) );
 }
 
-template< typename T >
-std::string process<T>::cmdline() const
+inline
+std::string process::cmdline() const
 {
     assert( valid() );
     return m_cmdline;
 }
 
-template< typename T >
-std::string process<T>::title() const
+inline
+std::string process::title() const
 {
     assert( valid() );
     return m_title;
 }
 
-template< typename T >
-std::string process<T>::name() const
+inline
+std::string process::name() const
 {
     assert( valid() );
     return m_name;
 }
 
-template< typename T >
-std::vector< unsigned char > process<T>::icon() const
+inline
+std::vector< unsigned char > process::icon() const
 {
     using namespace ps::details;
     assert( valid() );
@@ -356,21 +352,21 @@ std::vector< unsigned char > process<T>::icon() const
     return icon_data;
 }
 
-template< typename T >
-std::string process<T>::version() const
+inline
+std::string process::version() const
 {
     assert( valid() );
     return m_version;
 }
 
-template< typename T >
-bool process<T>::valid() const
+inline
+bool process::valid() const
 {
     return m_pid != INVALID_PID;
 }
 
-template< typename T >
-int process<T>::kill( const bool softly ) const
+inline
+int process::kill( const bool softly ) const
 {
     using namespace ps::details;
     assert( valid() );
@@ -397,8 +393,8 @@ int process<T>::kill( const bool softly ) const
     return 0;
 }
 
-template< typename T >
-void describe( std::ostream & ostr, const process<T> & proc )
+inline
+void describe( std::ostream & ostr, const process & proc )
 {
     ostr << "pid: " << proc.pid() 
          << ", title: \"" << proc.title() 

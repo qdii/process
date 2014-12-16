@@ -12,11 +12,10 @@ namespace ps
 /**@struct snapshot
  * @brief A snapshot of all running processes at a given moment
  */
-template< typename T >
-struct snapshot : public std::vector< process< T > > 
+struct snapshot : public std::vector< process > 
 {
 private:
-    typedef std::vector< process< T > > container;
+    typedef std::vector< process > container;
 
 public:
     enum flags
@@ -30,7 +29,7 @@ public:
     explicit snapshot( flags = ENUMERATE_ALL );
 };
 
-template< typename CONTAINER, typename T >
+template< typename CONTAINER >
 CONTAINER get_entries_from_window_manager()
 {
     CONTAINER processes;
@@ -64,7 +63,7 @@ CONTAINER get_entries_from_window_manager()
 #elif HAVE_WINUSER_H
 
     std::vector< pid_t > pids;
-    if ( !EnumWindows( &find_pid_from_window<T>, reinterpret_cast<LPARAM>(&pids) ) )
+    if ( !EnumWindows( &find_pid_from_window, reinterpret_cast<LPARAM>(&pids) ) )
         return CONTAINER();
 
     for ( const pid_t pid : pids )
@@ -122,7 +121,7 @@ std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
     return pids;
 }
 
-template< typename CONTAINER, typename T >
+template< typename CONTAINER >
 CONTAINER get_entries_from_syscall()
 {
 #if HAVE_LIBPROC_H
@@ -140,7 +139,7 @@ CONTAINER get_entries_from_syscall()
     );
 }
 
-template < typename T > static
+static inline
 bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
         std::string & cmdline, pid_t & pid )
 {
@@ -182,17 +181,17 @@ bool read_entry_from_procfs( boost::filesystem::directory_iterator pos,
     return true;
 }
 
-template < typename T > static inline
+static inline
 bool read_entry_from_procfs(
         boost::filesystem::directory_iterator pos,
-        process<T> & out )
+        process & out )
 {
     std::string cmdline;
     pid_t pid;
 
-    if ( read_entry_from_procfs<T>( pos, cmdline, pid ) )
+    if ( read_entry_from_procfs( pos, cmdline, pid ) )
     {
-        out = process<T>( pid, cmdline );
+        out = process( pid, cmdline );
         return true;
     }
 
@@ -242,14 +241,14 @@ std::string get_cmdline_from_pid( const pid_t pid )
     {
         std::string cmdline;
         pid_t current_pid;
-        if ( read_entry_from_procfs<int>( pos, cmdline, current_pid ) && pid == current_pid )
+        if ( read_entry_from_procfs( pos, cmdline, current_pid ) && pid == current_pid )
             return cmdline;
     }
     return "";
 #endif
 }
 
-template < typename CONTAINER, typename T > static
+template < typename CONTAINER > static
 CONTAINER get_entries_from_procfs()
 {
     using namespace boost::filesystem;
@@ -259,41 +258,40 @@ CONTAINER get_entries_from_procfs()
     // until this is the last iterator, try and retrieve the process info
     for ( ; pos != directory_iterator(); ++pos )
     {
-        process<T> next_process;
-        if ( read_entry_from_procfs<T>( pos, next_process ) )
+        process next_process;
+        if ( read_entry_from_procfs( pos, next_process ) )
             all_processes.push_back( PS_MOVE( next_process ) );
     }
 
     return all_processes;
 }
 
-template< typename CONTAINER, typename T >
-CONTAINER capture_processes( typename snapshot<T>::flags flags )
+template< typename CONTAINER >
+CONTAINER capture_processes( typename snapshot::flags flags )
 {
     using namespace ps::details;
     CONTAINER all_processes;
 
-    if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
+    if ( flags & snapshot::ENUMERATE_BSD_APPS )
     {
-        const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
+        const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER >();
         all_processes.insert( all_processes.end(), bsd_processes.begin(), bsd_processes.end() );
 
-        const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
+        const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER >();
         all_processes.insert( all_processes.end(), procfs_entries.begin(), procfs_entries.end() );
     }
 
-    if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
+    if ( flags & snapshot::ENUMERATE_DESKTOP_APPS )
     {
-        const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
+        const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER >();
         all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
     }
 
     return all_processes;
 }
 
-template< typename T >
-snapshot<T>::snapshot( typename snapshot<T>::flags flags )
-    : std::vector< process<T> >( capture_processes< container, T >( flags ) )
+snapshot::snapshot( typename snapshot::flags flags )
+    : std::vector< process >( capture_processes< container >( flags ) )
 {
 }
 
@@ -301,33 +299,33 @@ snapshot<T>::snapshot( typename snapshot<T>::flags flags )
 pid_t get_foreground_pid()
 {
 #if HAVE_WINUSER_H
-    return get_pid_from_top_window<int>( GetForegroundWindow() );
+    return get_pid_from_top_window( GetForegroundWindow() );
 #else
     return INVALID_PID;
 #endif
 }
 #endif
 
-template< typename T >
-process<T> get_application_in_foreground()
+inline
+process get_application_in_foreground()
 {
 #if HAVE_LIBWNCK
     WnckScreen * const screen = wnck_screen_get_default();
     if ( !screen )
-        return process<T>();
+        return process();
 
     WnckWindow * const window = wnck_screen_get_active_window( screen );
     if ( !window )
-        return process<T>();
+        return process();
 
     const pid_t pid = wnck_window_get_pid( window );
-    return process<T>(
+    return process(
         pid,
         get_cmdline_from_pid( pid ),
         wnck_window_get_name( window )
         );
 #else
-    return process<T>( get_foreground_pid() );
+    return process( get_foreground_pid() );
 #endif
 }
 
