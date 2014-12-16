@@ -273,42 +273,21 @@ CONTAINER capture_processes( typename snapshot<T>::flags flags )
     using namespace ps::details;
     CONTAINER all_processes;
 
-    if ( target_os() == OS_MAC_OSX || target_os() == OS_LINUX )
+    if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
     {
-        if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
-        { 
-            const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), bsd_processes.begin(), bsd_processes.end() );
+        const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER, T >();
+        all_processes.insert( all_processes.end(), bsd_processes.begin(), bsd_processes.end() );
 
-            if ( target_os() == OS_LINUX )
-            {
-                const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
-                all_processes.insert( all_processes.end(), procfs_entries.begin(), procfs_entries.end() );
-            }
-        }
-
-        if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
-        {
-            const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
-        }
+        const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER, T >();
+        all_processes.insert( all_processes.end(), procfs_entries.begin(), procfs_entries.end() );
     }
 
-	else if ( target_os_windows() )
+    if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
     {
-        if ( flags & snapshot<T>::ENUMERATE_DESKTOP_APPS )
-        {
-            const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
-        }
-
-        if ( flags & snapshot<T>::ENUMERATE_BSD_APPS )
-        {
-		    const CONTAINER regular_processes = get_entries_from_syscall< CONTAINER, T >();
-            all_processes.insert( all_processes.end(), regular_processes.begin(), regular_processes.end() );
-        }
+        const CONTAINER gui_applications = get_entries_from_window_manager< CONTAINER, T >();
+        all_processes.insert( all_processes.end(), gui_applications.begin(), gui_applications.end() );
     }
-	
+
     return all_processes;
 }
 

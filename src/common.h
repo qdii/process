@@ -183,49 +183,6 @@ static PS_CONSTEXPR pid_t INVALID_PID = 0;
 namespace details
 {
     
-enum OS
-{
-    OS_WIN32,
-    OS_WIN64,
-    OS_IOS_SIMULATOR,
-    OS_IOS_DEVICE,
-    OS_MAC_OSX,
-    OS_LINUX,
-    OS_UNIX,
-    OS_POSIX,
-    OS_UNKNOWN
-};
-static PS_CONSTEXPR
-OS target_os()
-{
-#ifdef _WIN32
-#   ifdef _WIN64
-        return OS_WIN64;
-#   else
-        return OS_WIN32;
-#   endif
-#elif __APPLE__
-#   include "TargetConditionals.h"
-#   if TARGET_IPHONE_SIMULATOR
-        return OS_IOS_SIMULATOR; 
-#   elif TARGET_OS_IPHONE
-        return OS_IOS_DEVICE;
-#   elif TARGET_OS_MAC
-        return OS_MAC_OSX;     
-#   else
-        return OS_UNKNOWN; 
-#   endif
-#elif __linux
-    return OS_LINUX;
-#elif __unix // all unices not caught above
-    return OS_UNIX; 
-#elif __posix
-    return OS_POSIX; 
-#else
-    return UNKNOWN;
-#endif
-}
-
 #if HAVE_WINUSER_H
 template<typename T>
 pid_t get_pid_from_top_window( const HWND window )
@@ -373,12 +330,6 @@ std::string convert_kernel_drive_to_msdos_drive( std::string user_path )
     return user_path;
 }
 #endif
-
-static PS_CONSTEXPR
-bool target_os_windows()
-{
-    return target_os() == OS_WIN32 || target_os() == OS_WIN64;
-}
 
 static inline
 bool string_ends_in( const std::string & str, const std::string & suffix )
