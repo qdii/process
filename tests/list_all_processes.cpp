@@ -146,7 +146,7 @@ bool test_soft_kill()
     return signaled;
 #elif HAVE_SHELLEXECUTE
     ShellExecute( NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL );
-    Sleep( 1 );
+    Sleep( 1000 );
     ps::snapshot all_processes;
     auto notepad = std::find_if(
                        all_processes.begin(),
@@ -161,7 +161,7 @@ bool test_soft_kill()
         return false;
 
     notepad->kill( true );
-    Sleep( 1 );
+    Sleep( 1000 );
     ps::snapshot all_processes_after;
     if ( std::find_if(
                 all_processes_after.begin(),
@@ -196,7 +196,7 @@ bool test_hard_kill()
         return true;
 #elif HAVE_SHELLEXECUTE
     ShellExecute( NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL );
-    Sleep( 1 );
+    Sleep( 1000 );
     ps::snapshot all_processes;
     auto notepad = std::find_if(
                        all_processes.begin(),
@@ -211,7 +211,7 @@ bool test_hard_kill()
         return false;
 
     notepad->kill( false );
-    Sleep( 1 );
+    Sleep( 1000 );
     ps::snapshot all_processes_after;
     if ( std::find_if(
                 all_processes_after.begin(),

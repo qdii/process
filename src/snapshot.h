@@ -64,7 +64,7 @@ CONTAINER get_entries_from_window_manager()
 #elif HAVE_WINUSER_H
 
     std::vector< pid_t > pids;
-    if ( !EnumWindows( &find_pid_from_window, reinterpret_cast<LPARAM>( &pids ) ) )
+    if ( !EnumWindows( &details::find_pid_from_window, reinterpret_cast<LPARAM>( &pids ) ) )
         return CONTAINER();
 
     for ( const pid_t pid : pids )
@@ -256,13 +256,19 @@ CONTAINER get_entries_from_procfs()
     using namespace boost::filesystem;
     CONTAINER all_processes;
 
-    directory_iterator pos( "/proc" );
-    // until this is the last iterator, try and retrieve the process info
-    for ( ; pos != directory_iterator(); ++pos )
+    try
     {
-        process next_process;
-        if ( read_entry_from_procfs( pos, next_process ) )
-            all_processes.push_back( PS_MOVE( next_process ) );
+        directory_iterator pos( "/proc" );
+        // until this is the last iterator, try and retrieve the process info
+        for ( ; pos != directory_iterator(); ++pos )
+        {
+            process next_process;
+            if ( read_entry_from_procfs( pos, next_process ) )
+                all_processes.push_back( PS_MOVE( next_process ) );
+        }
+    }
+    catch ( boost::filesystem::filesystem_error & )
+    {
     }
 
     return all_processes;
@@ -296,7 +302,7 @@ CONTAINER capture_processes( typename snapshot::flags flags )
     return all_processes;
 }
 
-snapshot::snapshot( typename snapshot::flags flags )
+snapshot::snapshot( const snapshot::flags flags )
     : std::vector< process >( capture_processes< container >( flags ) )
 {
 }
@@ -305,7 +311,7 @@ snapshot::snapshot( typename snapshot::flags flags )
 pid_t get_foreground_pid()
 {
 #if HAVE_WINUSER_H
-    return get_pid_from_top_window( GetForegroundWindow() );
+    return details::get_pid_from_top_window( GetForegroundWindow() );
 #else
     return INVALID_PID;
 #endif

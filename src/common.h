@@ -185,7 +185,6 @@ namespace details
 {
 
 #if HAVE_WINUSER_H
-template<typename T>
 pid_t get_pid_from_top_window( const HWND window )
 {
     pid_t pid = INVALID_PID;
@@ -193,7 +192,7 @@ pid_t get_pid_from_top_window( const HWND window )
     return pid;
 }
 
-template<typename T> static
+static
 BOOL CALLBACK find_pid_from_window( HWND window_handle, LPARAM param )
 {
     if ( !param )
