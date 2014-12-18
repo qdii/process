@@ -237,6 +237,28 @@ bool test_foreground_process_has_icon()
     return !foreground_process.icon().empty();
 }
 
+bool test_get_argv_from_pid()
+{
+    using boost::filesystem::path;
+
+    ps::snapshot all_processes;
+    const auto myself = std::find_if( 
+            all_processes.cbegin(),
+            all_processes.cend(),
+            []( const ps::process & p ) { 
+                return equivalent( path( p.cmdline() ), path( own_name ) );
+        }
+    );
+
+    const auto argv =
+        ps::details::get_argv_from_pid( myself->pid() );
+
+    if ( argv.empty() )
+        return false;
+
+    return true;
+}
+
 int main( int, char * argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -251,4 +273,5 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_foreground_process_has_icon );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
+    LAUNCH_TEST( test_get_argv_from_pid );
 }

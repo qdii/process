@@ -49,6 +49,8 @@ AC_CHECK_HEADERS([sys/sysctl.h])
 AC_CHECK_HEADERS([sys/proc_info.h])
 AC_CHECK_HEADERS([libproc.h])
 AC_CHECK_HEADERS([gdk-pixbuf/gdk-pixbuf.h])
+AC_CHECK_HEADERS([unistd.h])
+AC_CHECK_HEADERS([linux/sysctl.h])
 AC_CHECK_FUNCS([kill])
 AC_CHECK_FUNCS([execve])
 AC_CHECK_FUNCS([fork])
@@ -71,6 +73,8 @@ PKG_CHECK_MODULES([WNCK],
                   [libwnck-3.0],
                   [AC_DEFINE([HAVE_LIBWNCK],[1],[Defined to 1 if libwnck is available])],
                   [AC_MSG_WARN([Could not detect libwnck, which is necessary to enumerate windows on linux])])
+AX_CHECK_DEFINE([sys/sysctl.h],[KERN_ARGMAX])
+AX_CHECK_DEFINE([sys/sysctl.h],[KERN_PROCARGS2])
 AC_LANG_POP
 
 # Checks for libraries.
