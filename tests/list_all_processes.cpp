@@ -5,6 +5,7 @@
 #include "../src/process.h"
 #include "../src/snapshot.h"
 #include "../src/cocoa.h"
+#include "../src/java.h"
 #if HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -13,6 +14,7 @@
     launch_test( X, #X )
 
 static std::string own_name;
+static std::string argv_java_minecraft="/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home/bin/java -Xdock:icon=/Users/sdomingues/Library/Application Support/minecraft/assets/objects/99/991b421dfd401f115241601b2b373140a8d78572 -Xdock:name=Minecraft -Xmx1G -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:-UseAdaptiveSizePolicy -Xmn128M -Djava.library.path=/Users/sdomingues/Library/Application Support/minecraft/versions/1.7.10/1.7.10-natives-1407418625799030000 -cp /Users/sdomingues/Library/Application Support/minecraft/libraries/com/mojang/realms/1.3.3/realms-1.3.3.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/apache/httpcomponents/httpclient/4.3.3/httpclient-4.3.3.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/apache/httpcomponents/httpcore/4.3.2/httpcore-4.3.2.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/java3d/vecmath/1.3.1/vecmath-1.3.1.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/ibm/icu/icu4j-core-mojang/51.2/icu4j-core-mojang-51.2.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/net/sf/jopt-simple/jopt-simple/4.5/jopt-simple-4.5.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/paulscode/codecjorbis/20101023/codecjorbis-20101023.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/paulscode/codecwav/20101023/codecwav-20101023.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/paulscode/libraryjavasound/20101123/libraryjavasound-20101123.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/paulscode/librarylwjglopenal/20100824/librarylwjglopenal-20100824.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/paulscode/soundsystem/20120107/soundsystem-20120107.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/io/netty/netty-all/4.0.10.Final/netty-all-4.0.10.Final.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/google/guava/guava/15.0/guava-15.0.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/commons-io/commons-io/2.4/commons-io-2.4.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/commons-codec/commons-codec/1.9/commons-codec-1.9.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/com/mojang/authlib/1.5.16/authlib-1.5.16.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/apache/logging/log4j/log4j-api/2.0-beta9/log4j-api-2.0-beta9.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/apache/logging/log4j/log4j-core/2.0-beta9/log4j-core-2.0-beta9.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/lwjgl/lwjgl/lwjgl/2.9.1/lwjgl-2.9.1.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/org/lwjgl/lwjgl/lwjgl_util/2.9.1/lwjgl_util-2.9.1.jar:/Users/sdomingues/Library/Application Support/minecraft/libraries/tv/twitch/twitch/5.16/twitch-5.16.jar:/Users/sdomingues/Library/Application Support/minecraft/versions/1.7.10/1.7.10.jar net.minecraft.client.main.Main --username Player --version 1.7.10 --gameDir /Users/sdomingues/Library/Application Support/minecraft --assetsDir /Users/sdomingues/Library/Application Support/minecraft/assets --assetIndex 1.7.10 --uuid 00000000-0000-0000-0000-000000000000 --accessToken 83b2f48ee15640ee82f0428636f2207c --userProperties {} --userType legacy --demo";
 
 #if HAVE_SIGNAL_H
 static volatile bool signaled = false;
@@ -259,6 +261,17 @@ bool test_get_argv_from_pid()
     return true;
 }
 
+bool test_extract_name_and_icon_from_argv()
+{
+    const auto & name_and_icon =
+        ps::extract_name_and_icon_from_argv( argv_java_minecraft );
+
+    if ( name_and_icon.first.empty() || name_and_icon.second.empty() )
+        return false;
+
+    return true;
+}
+
 int main( int, char * argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -272,6 +285,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_foreground_process );
     LAUNCH_TEST( test_foreground_process_has_icon );
     LAUNCH_TEST( test_get_argv_from_pid );
+    LAUNCH_TEST( test_extract_name_and_icon_from_argv );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
 }
