@@ -9,6 +9,7 @@ namespace ps
 inline
 std::vector< std::string > split_space_delimited_string( std::string input )
 {
+    assert( !input.empty() );
     std::istringstream buffer( input );
 
     return std::vector< std::string >(
@@ -81,7 +82,9 @@ extract_name_and_icon_from_argv( const std::vector< std::string > & arguments )
 inline
 std::pair< std::string, std::string >
 extract_name_and_icon_from_argv( std::string argv )
-{    
+{
+    assert( !argv.empty() );
+
     const std::vector< std::string > arguments =
         split_space_delimited_string( std::move( argv ) );
 

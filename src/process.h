@@ -13,6 +13,39 @@ namespace ps
 {
 namespace details
 {
+
+std::string get_package_name( const pid_t pid )
+{
+#if HAVE_WINBASE_H
+    using ps::details;
+
+    const library kernel32( "Kernel32.dll" );
+    if ( !kernel32.is_loaded() )
+        return "";
+
+    const auto get_package_id = kernel32.get_function( "GetPackageId" );
+    if ( get_package_id == nullptr )
+        return "";
+
+    const handle process_handle = get_handle_from_pid( pid );
+    if ( process_handle == INVALID_HANDLE )
+        return "";
+
+    unsigned size = 2048;
+    std::unique_ptr< BYTE[] > process_info( new BYTE[size] );
+
+    const LONG has_id = get_package_id( handle, &size, process_info.get() );
+    if ( has_id != ERROR_SUCCESS )
+        return "";
+
+    PACKAGE_ID * const package = reinterpret_cast< PACKAGE_ID* >( process_info.get() );
+    return to_utf8( std::wstring( package->name ) );
+#else
+    (void)pid;
+    return "";
+#endif
+}
+
 #   if HAVE_WINVER_H
 static inline
 std::string get_specific_file_info(
@@ -148,6 +181,9 @@ private:
 
     ///< Used on mac to store the path to the icon
     std::string m_icon;
+
+private:
+    void improve_metro_name();
 };
 
 inline
@@ -301,6 +337,9 @@ process::process( const pid_t pid )
             get_icon_path_from_icon_name( bundle_path,
                                           icon_name ) );
 #endif
+
+    if ( name() == "WWAHost.exe" )
+        m_title = get_package_name( m_pid );
 }
 
 inline

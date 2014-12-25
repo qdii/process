@@ -10,6 +10,10 @@
 #include <signal.h>
 #endif
 
+#if HAVE_WINNT_H
+#include <winnt.h>
+#endif
+
 #define LAUNCH_TEST( X ) \
     launch_test( X, #X )
 
@@ -272,6 +276,29 @@ bool test_extract_name_and_icon_from_argv()
     return true;
 }
 
+bool test_get_package_id()
+{
+#if HAVE_WINNT_H
+    const auto windows_version = GetVersion();
+    const auto major = windows_version.dwMajorVersion;
+    const auto minor = windows_version.dwMinorVersion;
+
+    if ( major != 6 || !( major == 2 || minor == 3 ) )
+        return true;
+
+    ps::snapshot all_processes;
+    const auto metro = std::find_if(
+        all_processes.cbegin(),
+        all_processes.cend(),
+        []( const ps::process & p ) {
+            return !ps::details::get_package_id( p.pid() ).empty();
+        }
+    );
+#else
+    return true;
+#endif
+}
+
 int main( int, char * argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -286,6 +313,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_foreground_process_has_icon );
     LAUNCH_TEST( test_get_argv_from_pid );
     LAUNCH_TEST( test_extract_name_and_icon_from_argv );
+    LAUNCH_TEST( test_get_package_id );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
 }

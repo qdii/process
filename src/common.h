@@ -512,6 +512,45 @@ ERROR_A:
     return "";
 }
 
+#if HAVE_WINDOWS_H
+struct library
+{
+    library( const std::string & dllname );
+    ~library();
+
+    bool is_loaded() const;
+    void * get_function( const std::string & name ) const;
+
+private:
+    const HMODULE m_handle;
+};
+
+library::library( const std::string & dllname )
+    : m_handle( LoadLibrary( dllname ) )
+{
+}
+
+library::~library()
+{
+    if ( is_loaded() )
+        FreeLibrary( m_handle );
+}
+
+bool library::is_loaded() const
+{
+    return m_handle != NULL;
+}
+
+void * library::get_function( const std::string & name )
+{
+    assert( is_loaded() );
+    assert( !name.empty() );
+
+    return GetProcAddress( m_handle, name.c_str() );
+}
+#endif
+
+
 } // namespace details
 } // namespace ps
 #endif // PS_COMMON_H
