@@ -1,10 +1,10 @@
-check_PROGRAMS = list_all_processes dump_all_icons
+check_PROGRAMS = tests dump_all_icons
 
-list_all_processes_SOURCES = list_all_processes.cpp
-list_all_processes_CPPFLAGS = -iquote $(top_srcdir) $(BOOST_CPPFLAGS) $(WNCK_CFLAGS)
-list_all_processes_LDFLAGS = $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_SYSTEM_LIBS)
-list_all_processes_DEPENDENCIES = $(top_builddir)/src/libprocess.la
-list_all_processes_LDADD = $(BOOST_FILESYSTEM_LIBS) $(BOOST_SYSTEM_LIBS) $(list_all_processes_DEPENDENCIES) $(WNCK_LIBS)
+tests_SOURCES = tests.cpp
+tests_CPPFLAGS = -iquote $(top_srcdir) $(BOOST_CPPFLAGS) $(WNCK_CFLAGS)
+tests_LDFLAGS = $(BOOST_FILESYSTEM_LDFLAGS) $(BOOST_SYSTEM_LIBS)
+tests_DEPENDENCIES = $(top_builddir)/src/libprocess.la
+tests_LDADD = $(BOOST_FILESYSTEM_LIBS) $(BOOST_SYSTEM_LIBS) $(tests_DEPENDENCIES) $(WNCK_LIBS)
 
 dump_all_icons_SOURCES = dump_all_icons.cpp
 dump_all_icons_CPPFLAGS = -iquote $(top_srcdir) $(BOOST_CPPFLAGS) $(WNCK_CFLAGS)
