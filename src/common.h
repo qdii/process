@@ -135,6 +135,10 @@
 #   include <sys/sysctl.h>
 #endif
 
+#if HAVE_APPMODEL_H
+#   include <appmodel.h>
+#endif
+
 #if !defined(HAVE_PID_T) || (HAVE_PID_T != 1)
 #   if HAVE_DWORD
 typedef DWORD pid_t;
@@ -508,6 +512,8 @@ ERROR_B:
     free(procargs);
 ERROR_A:
 
+#else
+(void)pid;
 #endif
     return "";
 }
@@ -526,7 +532,7 @@ private:
 };
 
 library::library( const std::string & dllname )
-    : m_handle( LoadLibrary( dllname ) )
+    : m_handle( LoadLibrary( dllname.c_str() ) )
 {
 }
 
@@ -541,7 +547,7 @@ bool library::is_loaded() const
     return m_handle != NULL;
 }
 
-void * library::get_function( const std::string & name )
+void * library::get_function( const std::string & name ) const
 {
     assert( is_loaded() );
     assert( !name.empty() );

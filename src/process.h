@@ -17,24 +17,26 @@ namespace details
 std::string get_package_name( const pid_t pid )
 {
 #if HAVE_WINBASE_H
-    using ps::details;
+    using namespace ps::details;
+    typedef LONG ( WINAPI *get_package_id_t )( HANDLE, UINT32*, BYTE* );
 
     const library kernel32( "Kernel32.dll" );
     if ( !kernel32.is_loaded() )
         return "";
 
-    const auto get_package_id = kernel32.get_function( "GetPackageId" );
+    const get_package_id_t get_package_id =
+        static_cast<get_package_id_t>( kernel32.get_function( "GetPackageId" ) );
     if ( get_package_id == nullptr )
         return "";
 
-    const handle process_handle = get_handle_from_pid( pid );
-    if ( process_handle == INVALID_HANDLE )
+    const handle process_handle = create_handle_from_pid( pid );
+    if ( process_handle == NULL )
         return "";
 
     unsigned size = 2048;
     std::unique_ptr< BYTE[] > process_info( new BYTE[size] );
 
-    const LONG has_id = get_package_id( handle, &size, process_info.get() );
+    const LONG has_id = get_package_id( process_handle, &size, process_info.get() );
     if ( has_id != ERROR_SUCCESS )
         return "";
 
@@ -338,7 +340,7 @@ process::process( const pid_t pid )
                                           icon_name ) );
 #endif
 
-    if ( name() == "WWAHost.exe" )
+    if ( m_name == "WWAHost.exe" || m_name == "WWAHost" )
         m_title = get_package_name( m_pid );
 }
 
