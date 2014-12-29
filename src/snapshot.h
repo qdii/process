@@ -71,33 +71,33 @@ CONTAINER get_entries_from_window_manager()
         processes.emplace_back( pid );
 
 #else
-    const int nbApplications =
+    const int nb_of_applications =
         get_desktop_applications( nullptr, nullptr, nullptr, 0 );
 
-    std::vector< pid_t > pidArray( nbApplications );
-    std::vector< char * > bundleIdentifierArray( nbApplications );
-    std::vector< char * > bundleNameArray( nbApplications );
+    std::vector< pid_t > pid_array( nb_of_applications );
+    std::vector< char * > bundle_identifier_array( nb_of_applications );
+    std::vector< char * > bundle_name_array( nb_of_applications );
     const int success = get_desktop_applications(
-                            const_cast<pid_t *>( pidArray.data() ),
-                            const_cast<char **>( bundleIdentifierArray.data() ),
-                            const_cast<char **>( bundleNameArray.data() ),
-                            nbApplications
+                            const_cast<pid_t *>( pid_array.data() ),
+                            const_cast<char **>( bundle_identifier_array.data() ),
+                            const_cast<char **>( bundle_name_array.data() ),
+                            nb_of_applications
                         );
     if ( success < 0 )
         goto exit;
 
     for ( int i = 0; i < success; ++i )
     {
-        if ( pidArray[i] == INVALID_PID )
+        if ( pid_array[i] == INVALID_PID )
             continue;
 
-        processes.emplace_back( pidArray[i] );
+        processes.emplace_back( pid_array[i] );
     }
 
 exit:
-    std::for_each( bundleIdentifierArray.begin(), bundleIdentifierArray.end(),
+    std::for_each( bundle_identifier_array.begin(), bundle_identifier_array.end(),
                    &free );
-    std::for_each( bundleNameArray.begin(), bundleNameArray.end(), &free );
+    std::for_each( bundle_name_array.begin(), bundle_name_array.end(), &free );
 
 #endif
     return processes;
