@@ -1,0 +1,3 @@
+[submodule "thirdparty/libicns"]
+	path = thirdparty/libicns
+	url = https://github.com/pornel/libicns.git
