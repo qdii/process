@@ -351,6 +351,7 @@ process::process()
     , m_title( "" )
     , m_name( "" )
     , m_version( "" )
+    , m_icon( "" )
 {
 }
 
