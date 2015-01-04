@@ -96,7 +96,7 @@ std::string get_java_name( const pid_t pid )
 {
     assert( pid != INVALID_PID );
 
-    const auto & name_and_icon = 
+    const auto & name_and_icon =
         extract_name_and_icon_from_argv( ps::details::get_argv_from_pid( pid ) );
 
     return name_and_icon.first;

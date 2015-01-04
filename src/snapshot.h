@@ -54,7 +54,8 @@ snapshot get_entries_from_window_manager()
 #elif HAVE_WINUSER_H
 
     std::vector< pid_t > pids;
-    if ( !EnumWindows( &details::find_pid_from_window, reinterpret_cast<LPARAM>( &pids ) ) )
+    if ( !EnumWindows( &details::find_pid_from_window,
+                       reinterpret_cast<LPARAM>( &pids ) ) )
         return snapshot();
 
     for ( const pid_t pid : pids )

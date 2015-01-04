@@ -372,20 +372,22 @@ std::string get_argv_from_pid( const int pid )
 {
 #if HAVE_UNISTD_H && HAVE_SYS_SYSCTL_H && DEFINED_KERN_ARGMAX && DEFINED_KERN_PROCARGS2
     int    mib[3], argmax, nargs, c = 0;
-    char    *procargs, *sp, *np, *cp;
+    char  *  procargs, *sp, *np, *cp;
     int show_args = 1;
 
     mib[0] = CTL_KERN;
     mib[1] = KERN_ARGMAX;
 
-    size_t size = sizeof(argmax);
-    if (sysctl(mib, 2, &argmax, &size, NULL, 0) == -1) {
+    size_t size = sizeof( argmax );
+    if ( sysctl( mib, 2, &argmax, &size, NULL, 0 ) == -1 )
+    {
         goto ERROR_A;
     }
 
     /* Allocate space for the arguments. */
-    procargs = (char *)malloc(argmax);
-    if (procargs == NULL) {
+    procargs = ( char * )malloc( argmax );
+    if ( procargs == NULL )
+    {
         goto ERROR_A;
     }
 
@@ -436,33 +438,40 @@ std::string get_argv_from_pid( const int pid )
     mib[2] = pid;
 
 
-    size = (size_t)argmax;
-    if (sysctl(mib, 3, procargs, &size, NULL, 0) == -1) {
+    size = ( size_t )argmax;
+    if ( sysctl( mib, 3, procargs, &size, NULL, 0 ) == -1 )
+    {
         goto ERROR_B;
     }
 
-    memcpy(&nargs, procargs, sizeof(nargs));
-    cp = procargs + sizeof(nargs);
+    memcpy( &nargs, procargs, sizeof( nargs ) );
+    cp = procargs + sizeof( nargs );
 
     /* Skip the saved exec_path. */
-    for (; cp < &procargs[size]; cp++) {
-        if (*cp == '\0') {
+    for ( ; cp < &procargs[size]; cp++ )
+    {
+        if ( *cp == '\0' )
+        {
             /* End of exec_path reached. */
             break;
         }
     }
-    if (cp == &procargs[size]) {
+    if ( cp == &procargs[size] )
+    {
         goto ERROR_B;
     }
 
     /* Skip trailing '\0' characters. */
-    for (; cp < &procargs[size]; cp++) {
-        if (*cp != '\0') {
+    for ( ; cp < &procargs[size]; cp++ )
+    {
+        if ( *cp != '\0' )
+        {
             /* Beginning of first argument reached. */
             break;
         }
     }
-    if (cp == &procargs[size]) {
+    if ( cp == &procargs[size] )
+    {
         goto ERROR_B;
     }
     /* Save where the argv[0] string starts. */
@@ -475,19 +484,25 @@ std::string get_argv_from_pid( const int pid )
      * know where the command arguments end and the environment strings
      * start, which is why the '=' character is searched for as a heuristic.
      */
-    for (np = NULL; c < nargs && cp < &procargs[size]; cp++) {
-        if (*cp == '\0') {
+    for ( np = NULL; c < nargs && cp < &procargs[size]; cp++ )
+    {
+        if ( *cp == '\0' )
+        {
             c++;
-            if (np != NULL) {
+            if ( np != NULL )
+            {
                 /* Convert previous '\0'. */
                 *np = ' ';
-            } else {
+            }
+            else
+            {
                 /* *argv0len = cp - sp; */
             }
             /* Note location of current '\0'. */
             np = cp;
 
-            if (!show_args) {
+            if ( !show_args )
+            {
                 /*
                  * Don't convert '\0' characters to ' '.
                  * However, we needed to know that the
@@ -503,7 +518,8 @@ std::string get_argv_from_pid( const int pid )
      * sp points to the beginning of the arguments/environment string, and
      * np should point to the '\0' terminator for the string.
      */
-    if (np == NULL || np == sp) {
+    if ( np == NULL || np == sp )
+    {
         /* Empty or unterminated string. */
         goto ERROR_B;
     }
@@ -512,15 +528,15 @@ std::string get_argv_from_pid( const int pid )
     return std::string( sp );
 
     /* Clean up. */
-    free(procargs);
+    free( procargs );
     return "";
 
 ERROR_B:
-    free(procargs);
+    free( procargs );
 ERROR_A:
 
 #else
-(void)pid;
+    ( void )pid;
 #endif
     return "";
 }
@@ -570,12 +586,18 @@ struct cfile
     {
     }
 
-    bool is_open() const { return m_file != NULL; }
-    ~cfile() noexcept { if (m_file) fclose( m_file ); }
+    bool is_open() const
+    {
+        return m_file != NULL;
+    }
+    ~cfile() noexcept { if ( m_file ) fclose( m_file ); }
 
-    operator FILE*() { return m_file; }
+    operator FILE * ()
+    {
+        return m_file;
+    }
 
-    private:
+private:
     FILE * m_file;
 };
 

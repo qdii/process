@@ -7,12 +7,12 @@
 #include "cocoa.h"
 
 #if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
-int get_desktop_applications( pid_t * pidArray, 
+int get_desktop_applications( pid_t * pidArray,
                               char ** bundleIdentifierArray,
                               char ** bundleNameArray,
                               int length )
 {
-    NSAutoreleasePool *p = [NSAutoreleasePool new];
+    NSAutoreleasePool * p = [NSAutoreleasePool new];
 
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
     NSArray * apps = [ws runningApplications];
@@ -22,16 +22,16 @@ int get_desktop_applications( pid_t * pidArray,
                        && bundleNameArray == 0 )
     {
         [p release];
-        return count; 
+        return count;
     }
 
-    NSUInteger max = (count > length) ? length:count;
-    for (NSUInteger i = 0; i < max; i++)
+    NSUInteger max = ( count > length ) ? length : count;
+    for ( NSUInteger i = 0; i < max; i++ )
     {
 
-        NSRunningApplication *app = [apps objectAtIndex: i];
+        NSRunningApplication * app = [apps objectAtIndex: i];
 
-        if(app.activationPolicy == NSApplicationActivationPolicyRegular)
+        if( app.activationPolicy == NSApplicationActivationPolicyRegular )
         {
             if ( pidArray )
                 pidArray[i] = [app processIdentifier];
@@ -55,18 +55,19 @@ int get_info_from_pid( pid_t pid, char ** title,
                        char ** icon,
                        char ** path )
 {
-    NSAutoreleasePool *p = [NSAutoreleasePool new];
+    NSAutoreleasePool * p = [NSAutoreleasePool new];
 
     ProcessSerialNumber psn = { kNoProcess, kNoProcess };
 
-    if ( GetProcessForPID(pid, &psn) != noErr )
+    if ( GetProcessForPID( pid, &psn ) != noErr )
     {
         [ p release ];
         return -1;
     }
 
-    CFDictionaryRef dictionary 
-        = ProcessInformationCopyDictionary(&psn, kProcessDictionaryIncludeAllInformationMask);
+    CFDictionaryRef dictionary
+        = ProcessInformationCopyDictionary( &psn,
+                                            kProcessDictionaryIncludeAllInformationMask );
 
     if ( !dictionary )
     {
@@ -74,8 +75,8 @@ int get_info_from_pid( pid_t pid, char ** title,
         return -2;
     }
 
-    NSString * bundlePath 
-        = (NSString*) CFDictionaryGetValue( dictionary, CFSTR("BundlePath") );
+    NSString * bundlePath
+        = ( NSString * ) CFDictionaryGetValue( dictionary, CFSTR( "BundlePath" ) );
     if ( !bundlePath )
     {
         [ p release ];
@@ -96,33 +97,33 @@ int get_info_from_pid( pid_t pid, char ** title,
         return -5;
     }
 
-    if (title)
+    if ( title )
     {
         NSString * data = [ infoDic valueForKey:@"CFBundleName"];
         *title = strdup( data ? [ data UTF8String ] : "" );
     }
 
-    if (name)
+    if ( name )
     {
         NSString * data = [ infoDic valueForKey:@"CFBundleIdentifier"];
         *name = strdup( data ? [ data UTF8String ] : "" );
     }
 
-    if (version)
+    if ( version )
     {
         NSString * data = [ infoDic valueForKey:@"CFBundleShortVersionString"];
         *version = strdup( data ? [ data UTF8String ] : "" );
     }
 
-    if (icon)
+    if ( icon )
     {
         NSString * data = [ infoDic valueForKey:@"CFBundleIconFile"];
         *icon = strdup( data ? [ data UTF8String ] : "" );
     }
 
-    if (path)
+    if ( path )
         *path = strdup( [ bundlePath UTF8String ] );
- 
+
     [ p release ];
     return 0;
 }
@@ -131,11 +132,11 @@ int get_info_from_pid( pid_t pid, char ** title,
 #if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
 pid_t get_foreground_pid()
 {
-    NSAutoreleasePool *p = [NSAutoreleasePool new];
+    NSAutoreleasePool * p = [NSAutoreleasePool new];
 
     pid_t pid;
     ProcessSerialNumber psn = { kNoProcess, kNoProcess };
- 
+
     if ( GetFrontProcess( &psn ) != noErr )
     {
         [ p release ];

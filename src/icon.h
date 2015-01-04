@@ -394,7 +394,7 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
             : m_family( nullptr )
         {
             const auto error =
-                icns_read_family_from_file( static_cast<FILE*>( icns_file ), &m_family );
+                icns_read_family_from_file( static_cast<FILE *>( icns_file ), &m_family );
 
             if ( error )
                 throw cannot_read_family_from_file();
@@ -408,7 +408,7 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
     struct image
     {
         image( family & img_family, const int format )
-            : m_image( static_cast< icns_image_t* >( malloc( sizeof( icns_image_t ) ) ) )
+            : m_image( static_cast< icns_image_t * >( malloc( sizeof( icns_image_t ) ) ) )
         {
             if ( !m_image )
                 throw std::bad_alloc();
@@ -418,7 +418,7 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
             const auto error =
                 icns_get_image32_with_mask_from_family( img_family.m_family, format, m_image );
 
-            if (error)
+            if ( error )
                 throw cannot_read_image_from_family();
         }
 
@@ -451,17 +451,17 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
 
         return raw_image.data();
     }
-    catch( cannot_read_family_from_file& )
+    catch( cannot_read_family_from_file & )
     {
         return std::vector< char >();
     }
-    catch( cannot_read_image_from_family& )
+    catch( cannot_read_image_from_family & )
     {
         return std::vector< char >();
     }
 
 #else
-    (void) path;
+    ( void ) path;
     return std::vector< char >();
 #endif
 }

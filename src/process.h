@@ -18,7 +18,7 @@ std::string get_package_name( const pid_t pid )
 {
 #if HAVE_WINBASE_H
     using namespace ps::details;
-    typedef LONG ( WINAPI *get_package_id_t )( HANDLE, UINT32*, BYTE* );
+    typedef LONG ( WINAPI * get_package_id_t )( HANDLE, UINT32 *, BYTE * );
 
     const library kernel32( "Kernel32.dll" );
     if ( !kernel32.is_loaded() )
@@ -43,7 +43,7 @@ std::string get_package_name( const pid_t pid )
     PACKAGE_ID * const package = reinterpret_cast< PACKAGE_ID* >( process_info.get() );
     return to_utf8( std::wstring( package->name ) );
 #else
-    (void)pid;
+    ( void )pid;
     return "";
 #endif
 }
