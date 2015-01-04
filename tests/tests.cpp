@@ -308,7 +308,23 @@ bool test_icns_extraction()
     const auto raw_image =
         ps::details::extract_raw_icon_from_icns_file( icns_file );
 
-    return !raw_image.empty();
+    if ( raw_image.empty() )
+        return false;
+
+    return true;
+}
+
+bool test_icns_extraction_non_existing_file()
+{
+    const std::string icns_file( "some_non_existing_file.icns" );
+
+    const auto raw_image =
+        ps::details::extract_raw_icon_from_icns_file( icns_file );
+
+    if ( !raw_image.empty() )
+        return false;
+
+    return true;
 }
 
 int main( int, char * argv[] )
@@ -327,6 +343,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_extract_name_and_icon_from_argv );
     LAUNCH_TEST( test_get_package_id );
     LAUNCH_TEST( test_icns_extraction );
+    LAUNCH_TEST( test_icns_extraction_non_existing_file );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
 }
