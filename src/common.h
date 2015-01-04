@@ -81,6 +81,13 @@
 #   include <libwnck/libwnck.h>
 #endif
 
+#if HAVE_LIBICNS
+extern "C"
+{
+#   include <icns.h>
+}
+#endif
+
 #if HAVE_GDK_PIXBUF_GDK_PIXBUF_H
 #   include <gdk-pixbuf/gdk-pixbuf.h>
 #endif
@@ -555,6 +562,23 @@ void * library::get_function( const std::string & name ) const
     return GetProcAddress( m_handle, name.c_str() );
 }
 #endif
+
+struct cfile
+{
+    cfile( const std::string & path )
+        : m_file( fopen( path.c_str(), "r" ) )
+    {
+    }
+
+    bool is_open() const { return m_file != NULL; }
+    ~cfile() noexcept { if (m_file) fclose( m_file ); }
+
+    operator FILE*() { return m_file; }
+
+    private:
+    FILE * m_file;
+};
+
 
 
 } // namespace details

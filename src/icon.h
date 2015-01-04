@@ -370,6 +370,103 @@ std::string get_icon_path_from_icon_name( std::string bundle_path,
     return bundle_path + "/Contents/Resources/" + icon_name + ".icns";
 }
 
+static inline
+std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
+{
+    using namespace details;
+#if HAVE_BOOST_FILESYSTEM_PATH_HPP
+    assert( boost::filesystem::is_regular_file( boost::filesystem::path( path ) ) );
+#endif
+
+#if HAVE_LIBICNS
+    struct cannot_read_family_from_file : std::exception
+    {
+    };
+
+    struct cannot_read_image_from_family : std::exception
+    {
+    };
+
+    struct family
+    {
+        explicit
+        family( cfile & icns_file )
+            : m_family( nullptr )
+        {
+            const auto error =
+                icns_read_family_from_file( static_cast<FILE*>( icns_file ), &m_family );
+
+            if ( error )
+                throw cannot_read_family_from_file();
+        }
+
+        ~family() noexcept { free( m_family ); }
+
+        icns_family_t * m_family;
+    };
+
+    struct image
+    {
+        image( family & img_family, const int format )
+            : m_image( static_cast< icns_image_t* >( malloc( sizeof( icns_image_t ) ) ) )
+        {
+            if ( !m_image )
+                throw std::bad_alloc();
+
+            std::memset( m_image, 0, sizeof( icns_image_t ) );
+
+            const auto error =
+                icns_get_image32_with_mask_from_family( img_family.m_family, format, m_image );
+
+            if (error)
+                throw cannot_read_image_from_family();
+        }
+
+        std::vector< char > data() const
+        {
+            assert( m_image );
+            return std::vector< char >(
+                (char*)(m_image->imageData),
+                (char*)(m_image->imageData) + m_image->imageDataSize
+            );
+        }
+
+        ~image() noexcept
+        {
+            icns_free_image( m_image );
+            free( m_image );
+        }
+    private:
+        icns_image_t * m_image;
+    };
+
+    cfile icns_file( path );
+    if ( !icns_file.is_open() )
+        return std::vector< char >();
+
+    try
+    {
+        family icon_family( icns_file );
+        image raw_image( icon_family, ICNS_128X128_32BIT_DATA );
+
+        return raw_image.data();
+    }
+    catch( cannot_read_family_from_file& )
+    {
+        return std::vector< char >();
+    }
+    catch( cannot_read_image_from_family& )
+    {
+        return std::vector< char >();
+    }
+
+#else
+    (void) path;
+    return std::vector< char >();
+#endif
+}
+
+
 
 } // ns details
 } // ns ps

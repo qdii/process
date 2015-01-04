@@ -12,37 +12,27 @@ namespace ps
 /**@struct snapshot
  * @brief A snapshot of all running processes at a given moment
  */
-struct snapshot : public std::vector< process >
+typedef ::std::vector< process > snapshot;
+enum flags
 {
-private:
-    typedef std::vector< process > container;
-
-public:
-    enum flags
-    {
-        ENUMERATE_DESKTOP_APPS = 0x1,
-        ENUMERATE_BSD_APPS     = 0x2,
-        ENUMERATE_ALL          = 0x3,
-    };
-
-    /**@brief Takes a snapshot of all running processes */
-    explicit snapshot( flags = ENUMERATE_ALL );
+    ENUMERATE_DESKTOP_APPS = 0x1,
+    ENUMERATE_BSD_APPS     = 0x2,
+    ENUMERATE_ALL          = 0x3
 };
 
-template< typename CONTAINER >
-CONTAINER get_entries_from_window_manager()
+snapshot get_entries_from_window_manager()
 {
-    CONTAINER processes;
+    snapshot processes;
 #if HAVE_LIBWNCK
 
     if ( !gdk_init_check( NULL, NULL ) )
-        return CONTAINER();
+        return snapshot();
 
     WnckScreen * const screen
         = wnck_screen_get_default();
 
     if ( !screen )
-        return CONTAINER();
+        return snapshot();
 
     wnck_screen_force_update( screen );
 
@@ -65,7 +55,7 @@ CONTAINER get_entries_from_window_manager()
 
     std::vector< pid_t > pids;
     if ( !EnumWindows( &details::find_pid_from_window, reinterpret_cast<LPARAM>( &pids ) ) )
-        return CONTAINER();
+        return snapshot();
 
     for ( const pid_t pid : pids )
         processes.emplace_back( pid );
@@ -123,8 +113,7 @@ std::vector<pid_t> get_running_process_ids( const unsigned max_pids = 500 )
     return pids;
 }
 
-template< typename CONTAINER >
-CONTAINER get_entries_from_syscall()
+snapshot get_entries_from_syscall()
 {
 #if HAVE_LIBPROC_H
     const unsigned max_pids = proc_listpids( PROC_ALL_PIDS, 0, nullptr, 0 );
@@ -135,7 +124,7 @@ CONTAINER get_entries_from_syscall()
     std::vector<pid_t> running_pids
         = get_running_process_ids( max_pids );
 
-    return CONTAINER(
+    return snapshot(
                running_pids.begin(),
                std::remove( running_pids.begin(), running_pids.end(), INVALID_PID )
            );
@@ -250,11 +239,11 @@ std::string get_cmdline_from_pid( const pid_t pid )
 #endif
 }
 
-template < typename CONTAINER > static
-CONTAINER get_entries_from_procfs()
+inline
+snapshot get_entries_from_procfs()
 {
     using namespace boost::filesystem;
-    CONTAINER all_processes;
+    snapshot all_processes;
 
     try
     {
@@ -274,37 +263,32 @@ CONTAINER get_entries_from_procfs()
     return all_processes;
 }
 
-template< typename CONTAINER >
-CONTAINER capture_processes( typename snapshot::flags flags )
+inline
+snapshot capture( const ps::flags flags = ps::ENUMERATE_ALL )
 {
     using namespace ps::details;
-    CONTAINER all_processes;
+    snapshot all_processes;
 
-    if ( flags & snapshot::ENUMERATE_BSD_APPS )
+    if ( flags & ps::ENUMERATE_BSD_APPS )
     {
-        const CONTAINER bsd_processes = get_entries_from_syscall< CONTAINER >();
+        const snapshot bsd_processes = get_entries_from_syscall();
         all_processes.insert( all_processes.end(), bsd_processes.begin(),
                               bsd_processes.end() );
 
-        const CONTAINER procfs_entries = get_entries_from_procfs< CONTAINER >();
+        const snapshot procfs_entries = get_entries_from_procfs();
         all_processes.insert( all_processes.end(), procfs_entries.begin(),
                               procfs_entries.end() );
     }
 
-    if ( flags & snapshot::ENUMERATE_DESKTOP_APPS )
+    if ( flags & ps::ENUMERATE_DESKTOP_APPS )
     {
-        const CONTAINER gui_applications =
-            get_entries_from_window_manager< CONTAINER >();
+        const snapshot gui_applications =
+            get_entries_from_window_manager();
         all_processes.insert( all_processes.end(), gui_applications.begin(),
                               gui_applications.end() );
     }
 
     return all_processes;
-}
-
-snapshot::snapshot( const snapshot::flags flags )
-    : std::vector< process >( capture_processes< container >( flags ) )
-{
 }
 
 #if !HAVE_APPKIT_NSRUNNINGAPPLICATION_H || !HAVE_APPKIT_NSWORKSPACE_H || !HAVE_FOUNDATION_FOUNDATION_H

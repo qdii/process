@@ -70,6 +70,10 @@ AC_COMPILE_IFELSE(
 AC_CHECK_TYPES([pid_t])
 AC_CHECK_TYPES([unique_ptr],[],[],[[#include <memory>
                                     typedef std::unique_ptr<int> unique_ptr;]])
+PKG_CHECK_MODULES([ICNS],
+                  [libicns],
+                  [AC_DEFINE([HAVE_LIBICNS],[1],[Defined to 1 if libicns is available])],
+                  [AC_MSG_WARN([Could not detect libicns, which is necessary to enumerate windows on linux])])
 PKG_CHECK_MODULES([WNCK],
                   [libwnck-3.0],
                   [AC_DEFINE([HAVE_LIBWNCK],[1],[Defined to 1 if libwnck is available])],

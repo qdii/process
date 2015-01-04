@@ -50,7 +50,7 @@ launch_test( bool( * test_function )(), std::string name )
 bool count_processes()
 {
     unsigned count = 0;
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     for ( auto first( all_processes.begin() ),
             last ( all_processes.end()   );
             first != last; first++        )
@@ -65,20 +65,20 @@ bool count_processes()
 
 bool test_desktop_processes()
 {
-    ps::snapshot all_processes( ps::snapshot::ENUMERATE_DESKTOP_APPS );
+    ps::snapshot all_processes = ps::capture( ps::ENUMERATE_DESKTOP_APPS );
     return !all_processes.empty();
 }
 
 bool test_bsd_processes()
 {
-    ps::snapshot all_processes( ps::snapshot::ENUMERATE_BSD_APPS );
+    ps::snapshot all_processes = ps::capture( ps::ENUMERATE_BSD_APPS );
     return !all_processes.empty();
 }
 
 bool find_myself()
 {
     using boost::filesystem::path;
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     return std::find_if(
                all_processes.begin(),
                all_processes.end(),
@@ -92,7 +92,7 @@ bool find_myself()
 bool test_version()
 {
     // find at least one process which version is not null
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     return std::find_if(
                all_processes.begin(),
                all_processes.end(),
@@ -106,7 +106,7 @@ bool test_version()
 bool test_title()
 {
     // find at least one process which title is not null
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     return std::find_if(
                all_processes.begin(),
                all_processes.end(),
@@ -120,7 +120,7 @@ bool test_title()
 bool test_icon()
 {
     // find at least one process which icon is not an empty array
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     return std::find_if(
                all_processes.begin(),
                all_processes.end(),
@@ -136,7 +136,7 @@ bool test_soft_kill()
 #if HAVE_SIGNAL_H
     // try to kill oneself but catch the signal when it arrives
     signal( SIGTERM, sig_handler );
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
 
     auto myself = std::find_if(
                       all_processes.begin(),
@@ -153,7 +153,7 @@ bool test_soft_kill()
 #elif HAVE_SHELLEXECUTE
     ShellExecute( NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL );
     Sleep( 1000 );
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     auto notepad = std::find_if(
                        all_processes.begin(),
                        all_processes.end(),
@@ -168,7 +168,7 @@ bool test_soft_kill()
 
     notepad->kill( true );
     Sleep( 1000 );
-    ps::snapshot all_processes_after;
+    ps::snapshot all_processes_after = ps::capture();
     if ( std::find_if(
                 all_processes_after.begin(),
                 all_processes_after.end(),
@@ -203,7 +203,7 @@ bool test_hard_kill()
 #elif HAVE_SHELLEXECUTE
     ShellExecute( NULL, NULL, "notepad.exe", NULL, NULL, SW_SHOWNORMAL );
     Sleep( 1000 );
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     auto notepad = std::find_if(
                        all_processes.begin(),
                        all_processes.end(),
@@ -218,7 +218,7 @@ bool test_hard_kill()
 
     notepad->kill( false );
     Sleep( 1000 );
-    ps::snapshot all_processes_after;
+    ps::snapshot all_processes_after = ps::capture();
     if ( std::find_if(
                 all_processes_after.begin(),
                 all_processes_after.end(),
@@ -247,7 +247,7 @@ bool test_get_argv_from_pid()
 {
     using boost::filesystem::path;
 
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     const auto myself = std::find_if( 
             all_processes.cbegin(),
             all_processes.cend(),
@@ -286,7 +286,7 @@ bool test_get_package_id()
     if ( major != 6 || !( major == 2 || minor == 3 ) )
         return true;
 
-    ps::snapshot all_processes;
+    ps::snapshot all_processes = ps::capture();
     const auto metro = std::find_if(
         all_processes.cbegin(),
         all_processes.cend(),
@@ -297,6 +297,18 @@ bool test_get_package_id()
 #else
     return true;
 #endif
+}
+
+bool test_icns_extraction()
+{
+    const std::string icns_file( "test.icns" );
+    if ( !boost::filesystem::is_regular_file( icns_file ) )
+        return false;
+
+    const auto raw_image =
+        ps::details::extract_raw_icon_from_icns_file( icns_file );
+
+    return !raw_image.empty();
 }
 
 int main( int, char * argv[] )
@@ -314,6 +326,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_get_argv_from_pid );
     LAUNCH_TEST( test_extract_name_and_icon_from_argv );
     LAUNCH_TEST( test_get_package_id );
+    LAUNCH_TEST( test_icns_extraction );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
 }
