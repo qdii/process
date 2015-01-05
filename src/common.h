@@ -635,6 +635,28 @@ bool is_png( const T& data )
             const_cast<char*>( data.data() ) ) );
 }
 
+inline
+bool is_icns_header( unsigned char header[4] )
+{
+    return header[0] == 'i'
+        && header[1] == 'c'
+        && header[2] == 'n'
+        && header[3] == 's';
+}
+
+template< typename T >
+bool is_icns( const T& data )
+{
+    if ( data.size() < 8 )
+        return false;
+
+    return icns_header(
+        reinterpret_cast<unsigned char*>(
+            const_cast<char*>( data.data() ) ) );
+}
+
+
+
 } // namespace details
 } // namespace ps
 #endif // PS_COMMON_H

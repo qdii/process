@@ -343,6 +343,19 @@ bool test_recognize_png_file()
     return true;
 }
 
+bool test_recognize_icns_file()
+{
+    auto png_file_contents = read_whole_file( "test.png" );
+    if ( ps::details::is_icns( png_file_contents ) )
+        return false;
+
+    auto non_png_file_contents = read_whole_file( "test.icns" );
+    if ( !ps::details::is_icns( non_png_file_contents ) )
+        return false;
+
+    return true;
+}
+
 int main( int, char * argv[] )
 {
     own_name = boost::filesystem::canonical( argv[0] ).string();
@@ -360,6 +373,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_get_package_id );
     LAUNCH_TEST( test_icns_extraction );
     LAUNCH_TEST( test_recognize_png_file );
+    LAUNCH_TEST( test_recognize_icns_file );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
 }
