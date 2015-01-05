@@ -400,6 +400,9 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
                 throw cannot_read_family_from_file();
         }
 
+        family( family& );
+        family& operator=( family& );
+
         ~family() noexcept { free( m_family ); }
 
         icns_family_t * m_family;
@@ -421,6 +424,9 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
             if ( error )
                 throw cannot_read_image_from_family();
         }
+
+        image( image& );
+        image& operator=( image& );
 
         std::vector< char > data() const
         {

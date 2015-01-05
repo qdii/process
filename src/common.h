@@ -586,11 +586,19 @@ struct cfile
     {
     }
 
+    cfile( const cfile& );
+    cfile& operator=( const cfile& );
+
     bool is_open() const
     {
         return m_file != NULL;
     }
-    ~cfile() noexcept { if ( m_file ) fclose( m_file ); }
+
+    ~cfile() noexcept
+    {
+        if ( m_file ) 
+            fclose( m_file );
+    }
 
     operator FILE * ()
     {
