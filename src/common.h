@@ -601,7 +601,31 @@ private:
     FILE * m_file;
 };
 
+inline
+bool is_png_header( unsigned char header[8] )
+{
+    if ( header[0] != 137    ) return false;
+    if ( header[1] != 'P'    ) return false;
+    if ( header[2] != 'N'    ) return false;
+    if ( header[3] != 'G'    ) return false;
+    if ( header[4] != '\r'   ) return false;
+    if ( header[5] != '\n'   ) return false;
+    if ( header[6] != '\032' ) return false;
+    if ( header[7] != '\n'   ) return false;
 
+    return true;
+}
+
+template< typename T >
+bool is_png( const T& data )
+{
+    if ( data.size() < 8 )
+        return false;
+
+    return is_png_header(
+        reinterpret_cast<unsigned char*>(
+            const_cast<char*>( data.data() ) ) );
+}
 
 } // namespace details
 } // namespace ps

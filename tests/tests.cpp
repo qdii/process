@@ -314,14 +314,30 @@ bool test_icns_extraction()
     return true;
 }
 
-bool test_icns_extraction_non_existing_file()
+inline
+std::vector< char > read_whole_file( const std::string & path )
 {
-    const std::string icns_file( "some_non_existing_file.icns" );
+    std::ifstream file( path );
+    file.seekg( 0, std::ifstream::end );
+    const auto total_size = static_cast<int>( file.tellg( ) );
+    file.seekg( 0, std::ifstream::beg );
 
-    const auto raw_image =
-        ps::details::extract_raw_icon_from_icns_file( icns_file );
+    std::vector< char > contents;
+    contents.resize( total_size );
 
-    if ( !raw_image.empty() )
+    file.read( &contents[0], total_size );
+
+    return contents;
+}
+
+bool test_recognize_png_file()
+{
+    auto png_file_contents = read_whole_file( "test.png" );
+    if ( !ps::details::is_png( png_file_contents ) )
+        return false;
+
+    auto non_png_file_contents = read_whole_file( "test.icns" );
+    if ( ps::details::is_png( non_png_file_contents ) )
         return false;
 
     return true;
@@ -343,7 +359,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_extract_name_and_icon_from_argv );
     LAUNCH_TEST( test_get_package_id );
     LAUNCH_TEST( test_icns_extraction );
-    LAUNCH_TEST( test_icns_extraction_non_existing_file );
+    LAUNCH_TEST( test_recognize_png_file );
     LAUNCH_TEST( test_soft_kill );
     LAUNCH_TEST( test_hard_kill );
 }
