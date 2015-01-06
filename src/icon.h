@@ -372,7 +372,7 @@ std::string get_icon_path_from_icon_name( std::string bundle_path,
 
 #if HAVE_LIBPNG
 static
-void append_buffer(png_structp png_ptr, png_bytep data, png_size_t length)
+void append_buffer( png_structp png_ptr, png_bytep data, png_size_t length )
 {
     std::vector< char > * const buffer =
         reinterpret_cast< std::vector< char > * >( png_get_io_ptr( png_ptr ) );
@@ -413,8 +413,8 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path, b
                 throw cannot_read_family_from_file();
         }
 
-        family( family& );
-        family& operator=( family& );
+        family( family & );
+        family & operator=( family & );
 
         ~family() noexcept { free( m_family ); }
 
@@ -474,8 +474,14 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path, b
                     png_destroy_write_struct( &m_struct, &m_info );
                 }
 
-                operator png_structp() { return m_struct; }
-                operator png_infop()   { return m_info; }
+                operator png_structp()
+                {
+                    return m_struct;
+                }
+                operator png_infop()
+                {
+                    return m_info;
+                }
 
             private:
                 png_structp m_struct;
@@ -489,7 +495,7 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path, b
             const auto width            = m_image->imageWidth;
 
             std::vector< char > buffer;
-            png_set_write_fn( png_env, (void *)&buffer, &append_buffer, NULL);
+            png_set_write_fn( png_env, ( void * )&buffer, &append_buffer, NULL );
             png_set_filter  ( png_env, 0, PNG_FILTER_NONE );
             png_set_IHDR    ( png_env, png_env, width, height, depth,
                               PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
@@ -533,7 +539,7 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path, b
             free( m_image );
         }
 
-        operator icns_image_t *()
+        operator icns_image_t * ()
         {
             return m_image;
         }

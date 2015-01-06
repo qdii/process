@@ -89,7 +89,7 @@
 extern "C"
 {
 #   include <icns.h>
-    int icns_image_to_png(icns_image_t *, icns_size_t *, icns_byte_t **);
+    int icns_image_to_png( icns_image_t *, icns_size_t *, icns_byte_t ** );
 }
 #endif
 
@@ -591,8 +591,8 @@ struct cfile
     {
     }
 
-    cfile( const cfile& );
-    cfile& operator=( const cfile& );
+    cfile( const cfile & );
+    cfile & operator=( const cfile & );
 
     bool is_open() const
     {
@@ -601,7 +601,7 @@ struct cfile
 
     ~cfile() noexcept
     {
-        if ( m_file ) 
+        if ( m_file )
             fclose( m_file );
     }
 
