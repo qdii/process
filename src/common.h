@@ -655,7 +655,7 @@ bool is_icns( const T& data )
     if ( data.size() < 8 )
         return false;
 
-    return icns_header(
+    return is_icns_header(
         reinterpret_cast<unsigned char*>(
             const_cast<char*>( data.data() ) ) );
 }
