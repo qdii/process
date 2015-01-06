@@ -7,11 +7,11 @@ libprocess_la_CPPFLAGS = \
 	$(WNCK_CFLAGS)
 
 libprocess_la_SOURCES = \
-	common.h \
-	process.h \
-	snapshot.h \
-	icon.h \
-	cocoa.h \
+	$(top_srcdir)/include/ps/common.h \
+	$(top_srcdir)/include/ps/process.h \
+	$(top_srcdir)/include/ps/snapshot.h \
+	$(top_srcdir)/include/ps/icon.h \
+	$(top_srcdir)/include/ps/cocoa.h \
 	cocoa.mm
 
 libprocess_la_LDFLAGS = \

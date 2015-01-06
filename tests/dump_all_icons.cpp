@@ -1,6 +1,6 @@
-#include "../src/snapshot.h"
-#include "../src/process.h"
-#include "../src/cocoa.h"
+#include "ps/snapshot.h"
+#include "ps/process.h"
+#include "ps/cocoa.h"
 
 int main()
 {
