@@ -14,3 +14,5 @@ libprocess_la_SOURCES = \
 	cocoa.h \
 	cocoa.mm
 
+libprocess_la_LDFLAGS = \
+	-release @PACKAGE_VERSION@
