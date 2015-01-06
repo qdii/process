@@ -78,6 +78,10 @@ PKG_CHECK_MODULES([WNCK],
                   [libwnck-3.0],
                   [AC_DEFINE([HAVE_LIBWNCK],[1],[Defined to 1 if libwnck is available])],
                   [AC_MSG_WARN([Could not detect libwnck, which is necessary to enumerate windows on linux])])
+PKG_CHECK_MODULES([PNG],
+                  [libpng16],
+                  [AC_DEFINE([HAVE_LIBPNG],[1],[Defined to 1 if libpng is available])],
+                  [AC_MSG_WARN([Could not detect libpng, which is necessary to transform icons to png files])])
 AX_CHECK_DEFINE([sys/sysctl.h],[KERN_ARGMAX],[CPPFLAGS="-DDEFINED_KERN_ARGMAX=1 $CPPFLAGS"])
 AX_CHECK_DEFINE([sys/sysctl.h],[KERN_PROCARGS2],[CPPFLAGS="-DDEFINED_KERN_PROCARGS2=1 $CPPFLAGS"])
 AC_LANG_POP

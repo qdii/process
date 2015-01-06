@@ -370,8 +370,21 @@ std::string get_icon_path_from_icon_name( std::string bundle_path,
     return bundle_path + "/Contents/Resources/" + icon_name + ".icns";
 }
 
+#if HAVE_LIBPNG
+static
+void append_buffer(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+    std::vector< char > * const buffer =
+        reinterpret_cast< std::vector< char > * >( png_get_io_ptr( png_ptr ) );
+
+    buffer->insert( buffer->end(),
+                    reinterpret_cast< char * >( data ),
+                    reinterpret_cast< char * >( data + length ) );
+}
+#endif
+
 static inline
-std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
+std::vector< char > extract_raw_icon_from_icns_file( const std::string & path, bool convert_to_png = false )
 {
     using namespace details;
 #if HAVE_BOOST_FILESYSTEM_PATH_HPP
@@ -437,10 +450,92 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
             );
         }
 
+        std::vector< char > to_png() const
+        {
+            assert( m_image );
+
+#if HAVE_LIBPNG
+            struct png_environment
+            {
+                png_environment()
+                    : m_struct( png_create_write_struct( PNG_LIBPNG_VER_STRING, NULL, NULL, NULL ) )
+                    , m_info( nullptr )
+                {
+                    if ( !m_struct )
+                        throw std::bad_alloc();
+
+                    m_info = png_create_info_struct( m_struct );
+                    if ( !m_info )
+                        throw std::bad_alloc();
+                }
+
+                ~png_environment() noexcept
+                {
+                    png_destroy_write_struct( &m_struct, &m_info );
+                }
+
+                operator png_structp() { return m_struct; }
+                operator png_infop()   { return m_info; }
+
+            private:
+                png_structp m_struct;
+                png_infop   m_info;
+            } png_env;
+
+            const auto * const img_data = m_image->imageData;
+            const auto channels         = m_image->imageChannels;
+            const auto depth            = m_image->imagePixelDepth;
+            const auto height           = m_image->imageHeight;
+            const auto width            = m_image->imageWidth;
+
+            std::vector< char > buffer;
+            png_set_write_fn( png_env, (void *)&buffer, &append_buffer, NULL);
+            png_set_filter  ( png_env, 0, PNG_FILTER_NONE );
+            png_set_IHDR    ( png_env, png_env, width, height, depth,
+                              PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                              PNG_COMPRESSION_TYPE_DEFAULT,
+                              PNG_FILTER_TYPE_DEFAULT
+                            );
+            png_write_info  ( png_env, png_env );
+
+            if ( depth < 8 )
+                png_set_packing( png_env );
+
+            std::vector< png_bytep > rows;
+            for ( int i = 0; i < height; ++i )
+            {
+                rows.emplace_back( new png_byte[ width * channels ] );
+                for ( int j = 0; j < width; ++j )
+                {
+                    const auto & src_pixel
+                        = img_data[ i * width * channels + j * channels ];
+
+                    auto & dst_pixel = rows[i][ j * channels ];
+
+                    dst_pixel = src_pixel;
+                }
+            }
+
+            png_write_image( png_env, rows.data() );
+            png_write_end( png_env, png_env );
+
+            std::for_each( rows.begin(), rows.end(),
+                           []( png_bytep data ) { delete [] data; } );
+            return buffer;
+#else
+            return nullptr;
+#endif
+        }
+
         ~image() noexcept
         {
             icns_free_image( m_image );
             free( m_image );
+        }
+
+        operator icns_image_t *()
+        {
+            return m_image;
         }
     private:
         icns_image_t * m_image;
@@ -455,7 +550,10 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path )
         family icon_family( icns_file );
         image raw_image( icon_family, ICNS_128X128_32BIT_DATA );
 
-        return raw_image.data();
+        if ( !convert_to_png )
+            return raw_image.data();
+
+        return raw_image.to_png();
     }
     catch( cannot_read_family_from_file & )
     {

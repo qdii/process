@@ -299,6 +299,29 @@ bool test_get_package_id()
 #endif
 }
 
+bool test_icns_extraction_and_conversion()
+{
+    using namespace ps::details;
+
+    const std::string icns_file( "test.icns" );
+    if ( !boost::filesystem::is_regular_file( icns_file ) )
+        return false;
+
+    const auto png_image =
+        extract_raw_icon_from_icns_file( icns_file, true );
+
+    if ( png_image.empty() )
+        return false;
+
+    if ( png_image.size() < 8 )
+        return false;
+
+    if ( !is_png( png_image ) )
+        return false;
+
+    return true;
+}
+
 bool test_icns_extraction()
 {
     const std::string icns_file( "test.icns" );
@@ -372,6 +395,7 @@ int main( int, char * argv[] )
     LAUNCH_TEST( test_extract_name_and_icon_from_argv );
     LAUNCH_TEST( test_get_package_id );
     LAUNCH_TEST( test_icns_extraction );
+    LAUNCH_TEST( test_icns_extraction_and_conversion );
     LAUNCH_TEST( test_recognize_png_file );
     LAUNCH_TEST( test_recognize_icns_file );
     LAUNCH_TEST( test_soft_kill );

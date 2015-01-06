@@ -81,10 +81,15 @@
 #   include <libwnck/libwnck.h>
 #endif
 
+#if HAVE_LIBPNG
+#   include <png.h>
+#endif
+
 #if HAVE_LIBICNS
 extern "C"
 {
 #   include <icns.h>
+    int icns_image_to_png(icns_image_t *, icns_size_t *, icns_byte_t **);
 }
 #endif
 
