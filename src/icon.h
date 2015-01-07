@@ -511,6 +511,7 @@ std::vector< char > extract_raw_icon_from_icns_file( const std::string & path, b
             for ( int i = 0; i < height; ++i )
             {
                 rows.emplace_back( new png_byte[ width * channels ] );
+                std::memset( rows[i], 0, width * channels );
                 for ( int j = 0; j < width; ++j )
                 {
                     const auto & src_pixel
