@@ -1,7 +1,7 @@
 #ifndef PS_JAVA_H
 #define PS_JAVA_H
 
-#include "common.h"
+#include "ps/common.h"
 
 namespace ps
 {

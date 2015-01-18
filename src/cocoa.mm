@@ -4,7 +4,7 @@
 #import <AppKit/NSRunningApplication.h>
 #import <AppKit/NSWorkspace.h>
 #endif
-#include "cocoa.h"
+#include "ps/cocoa.h"
 
 #if HAVE_APPKIT_NSRUNNINGAPPLICATION_H && HAVE_APPKIT_NSWORKSPACE_H && HAVE_FOUNDATION_FOUNDATION_H
 int get_desktop_applications( pid_t * pidArray,

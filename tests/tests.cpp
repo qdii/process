@@ -1,11 +1,12 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 
-#include "../config.h"
-#include "../src/process.h"
-#include "../src/snapshot.h"
-#include "../src/cocoa.h"
-#include "../src/java.h"
+#include "config.h"
+#include "ps/process.h"
+#include "ps/snapshot.h"
+#include "ps/cocoa.h"
+#include "ps/java.h"
+
 #if HAVE_SIGNAL_H
 #include <signal.h>
 #endif

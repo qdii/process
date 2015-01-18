@@ -2,10 +2,10 @@
 #define PS_SNAPSHOT_H
 
 #include "config.h"
-#include "common.h"
-#include "process.h"
-#include "cocoa.h"
-#include "icon.h"
+#include "ps/common.h"
+#include "ps/process.h"
+#include "ps/cocoa.h"
+#include "ps/icon.h"
 
 namespace ps
 {

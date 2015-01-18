@@ -2,6 +2,9 @@ lib_LTLIBRARIES = libprocess.la
 
 AM_LIBTOOLFLAGS = --tag=CC
 
+libprocess_la_CPPFLAGS = \
+	-iquote$(top_srcdir)/include
+
 libprocess_la_SOURCES = \
 	common.h \
 	process.h \

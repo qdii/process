@@ -1,7 +1,7 @@
 #ifndef PS_ICON_H
 #define PS_ICON_H
 
-#include "common.h"
+#include "ps/common.h"
 
 namespace ps
 {

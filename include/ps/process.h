@@ -5,9 +5,9 @@
 // AUTHOR: Victor Lavaud <victor.lavaud@gmail.com>
 
 #include "config.h"
-#include "common.h"
-#include "icon.h"
-#include "cocoa.h"
+#include "ps/common.h"
+#include "ps/icon.h"
+#include "ps/cocoa.h"
 
 namespace ps
 {
