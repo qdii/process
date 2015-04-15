@@ -7,7 +7,7 @@ Here is a program that writes current running desktop application's pids and tit
 #include "snapshot.h"
 int main()
 {
-    ps::snapshot<void> running_processes;
+    ps::snapshot running_processes = ps::capture();
 
     // writes the applications titles to the standard output
     for ( const auto & process : running_processes )
