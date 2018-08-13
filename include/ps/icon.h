@@ -204,7 +204,7 @@ get_bitmap_from_hicon( HICON hIcon, const Gdiplus::PixelFormat pixel_format )
         {
             result->SetPixel( x, y, Color( *pixel ) );
             DWORD alpha = ( *pixel ) >> 24;
-            hasAlpha = hasAlpha || ( alpha > 0 && alpha < 255 );
+            hasAlpha = hasAlpha || ( alpha > 0 && alpha <= 255 );
         }
     }
 
